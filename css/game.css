@@ -275,7 +275,7 @@
 .seat-0 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); } 
 
 /* Bottom Right Group */
-.seat-1 { bottom: -120px; right: 22%; } 
+.seat-1 { bottom: -140px; right: 22%; } 
 .seat-1 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); }
 
 /* Right Side */
@@ -286,16 +286,16 @@
 .seat-3 .hand-cards { right: 170px; top: 50%; transform: translateY(-50%) translateY(75px); } /* Down by 1 card height */
 
 /* Top Right Group */
-.seat-4 { top: -120px; right: 22%; }
+.seat-4 { top: -140px; right: 22%; }
 .seat-4 .hand-cards { top: 150px; left: 50%; transform: translateX(-50%); }
 
 /* Dealer / Top Center */
-.seat-5 { top: -140px; left: 50%; transform: translateX(-50%); }
-.seat-5 .hand-cards { top: 150px; left: 50%; transform: translateX(-50%); } 
+.seat-5 { top: -146px; left: 50%; transform: translateX(-50%); }
+.seat-5 .hand-cards { top: 156px; left: 50%; transform: translateX(-50%); } 
 
 /* Top Left Group */
-.seat-6 { top: -120px; left: 22%; }
-.seat-6 .hand-cards { top: 150px; left: 50%; transform: translateX(-50%); }
+.seat-6 { top: -156px; left: 22%; }
+.seat-6 .hand-cards { top: 166px; left: 50%; transform: translateX(-50%); }
 
 /* Left Side */
 .seat-7 { top: calc(8% - 30px); left: -70px; }
@@ -305,7 +305,7 @@
 .seat-8 .hand-cards { left: 170px; top: 50%; transform: translateY(-50%) translateY(-75px); } /* Up by 1 card height */
 
 /* Bottom Left Group */
-.seat-9 { bottom: -120px; left: 22%; }
+.seat-9 { bottom: -140px; left: 22%; }
 .seat-9 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); }
 
 

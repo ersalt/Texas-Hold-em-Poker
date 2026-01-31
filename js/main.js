@@ -81,7 +81,7 @@ function startGame(roomType) {
         // startPage.style.display = 'none'; // done by css
         app.classList.remove('hidden');
         
-        // Initialize Game Logic with room settings if needed
+    // Initialize Game Logic with room settings if needed
         // For now, just init the standard game
         // If the game was already running, we might need to reset it
         if (window.game) {
@@ -100,10 +100,8 @@ function startGame(roomType) {
                 minChips = 20000;
             }
 
-            // We might need to extend Game class to accept config
-            // For now, we'll just start it. 
-            // Ideally, we reset the game state here.
-            window.game.init(); 
+            // Start game with current user balance if available
+            window.game.init(window.currentUserChips); 
             
             // TODO: Pass room configuration to game
             console.log(`Starting room ${roomType}`);
@@ -115,9 +113,43 @@ function returnToLobby() {
     const startPage = document.getElementById('start-page');
     const app = document.getElementById('app');
     
+    // Save current user chips before leaving
+    if (window.game && window.game.players && window.game.players.length > 0) {
+        // Player 0 is always human
+        window.currentUserChips = window.game.players[0].chips;
+        updateUserStats();
+    }
+
     app.classList.add('hidden');
     startPage.classList.remove('hidden');
     
-    // Reset game state if possible so next start is fresh
-    // window.game = new Game(); // Re-instantiate?
+    // Reset game state UI
+    if (window.game && window.game.ui) {
+        window.game.ui.reset();
+    }
+    // Logic reset will happen on next startGame() -> game.init()
 }
+
+function updateUserStats() {
+    const statsDiv = document.getElementById('user-stats');
+    const nickSpan = document.getElementById('start-nickname');
+    const balanceSpan = document.getElementById('start-balance');
+    
+    // Get settings
+    const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000};
+    
+    // Use saved chips if available, otherwise default
+    const currentChips = (typeof window.currentUserChips !== 'undefined') ? window.currentUserChips : settings.playerChips;
+    // Update global var if not set
+    if (typeof window.currentUserChips === 'undefined') {
+        window.currentUserChips = currentChips;
+    }
+
+    if (nickSpan) nickSpan.textContent = settings.nickname;
+    if (balanceSpan) balanceSpan.textContent = `$${currentChips}`;
+    
+    if (statsDiv) statsDiv.classList.remove('hidden');
+}
+
+// Call on init
+updateUserStats();

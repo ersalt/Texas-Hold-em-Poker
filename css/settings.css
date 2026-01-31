@@ -18,6 +18,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Ensure content is centered */
+    line-height: 0;
+    text-align: center;
+    padding: 0;
 }
 
 .settings-btn:hover {

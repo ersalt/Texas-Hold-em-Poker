@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/settings.css">
     <link rel="stylesheet" href="css/start.css">
+    <link rel="stylesheet" href="css/raise.css">
 </head>
 <body>
     <!-- Start Page -->
@@ -20,6 +21,16 @@
                 <div id="date-display">2024年1月1日 星期一</div>
             </div>
             <div id="greeting-display">你好，欢迎回来</div>
+            <div id="user-stats" class="user-stats hidden">
+                <div class="stat-item">
+                    <span class="stat-label">昵称：</span>
+                    <span id="start-nickname">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">余额：</span>
+                    <span id="start-balance">--</span>
+                </div>
+            </div>
         </div>
         <div class="start-right">
             <h1>德州扑克</h1>
@@ -32,6 +43,7 @@
     </div>
 
     <div id="app" class="hidden">
+        <button id="btn-back-home" class="back-btn">返回大厅</button>
         <!-- Settings Button -->
         <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
         
@@ -79,8 +91,8 @@
                             <p>作者：<strong>ersalt</strong></p>
                             <p>项目地址：<a href="https://github.com/ersalt/Texas-Hold-em-Poker" target="_blank" rel="noopener">https://github.com/ersalt/Texas-Hold-em-Poker</a></p>
                             <p>开源协议：<strong>MIT License</strong></p>
-                            <p>版权 © 2026 ersalt</p>
-                            <p>欢迎在 GitHub 提交 issue 或 PR。</p>
+                            <p>版权所有 © 2026 ersalt</p>
+                            <p>Power By Gemini 3.0 Pro</p>
                         </div>
                     </div>
                 </div>
@@ -88,7 +100,6 @@
         </div>
 
         <div id="game-table">
-            <button id="btn-back-home" class="back-btn">🏠 返回大厅</button>
             
             <!-- Deck Pile -->
             <div id="deck-pile" class="deck-area">
@@ -97,13 +108,16 @@
                 <div class="card back" style="position: absolute; top: -4px; left: -4px;"></div>
             </div>
 
-            <div id="community-cards" class="community-area">
-                <!-- Community cards will go here -->
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
+            <div id="community-cards-container">
+                <div id="community-cards" class="community-area">
+                    <!-- Community cards will go here -->
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                </div>
+                <div id="pot-display">底池（POT）：$0</div>
             </div>
 
             <div id="players-area">
@@ -116,6 +130,33 @@
                 <button id="btn-call" class="game-btn call">跟注 (Call)</button>
                 <button id="btn-raise" class="game-btn raise">加注 (Raise)</button>
                 <button id="btn-allin" class="game-btn allin">全押 (All In)</button>
+            </div>
+            
+            <!-- Raise Control Modal -->
+            <div id="raise-control" class="raise-control hidden">
+                <div class="raise-header">
+                    <span>加注金额</span>
+                    <button id="close-raise" class="close-btn">×</button>
+                </div>
+                <div class="raise-body">
+                    <div class="raise-info">
+                        <span id="raise-min">Min: 0</span>
+                        <span id="raise-max">Max: 0</span>
+                    </div>
+                    <div class="raise-input-group">
+                        <input type="range" id="raise-slider" class="raise-slider" min="0" max="100" step="1">
+                        <input type="number" id="raise-amount-input" class="raise-input" value="0">
+                    </div>
+                    <div class="raise-shortcuts">
+                        <button class="shortcut-btn" data-action="min">最小加注</button>
+                        <button class="shortcut-btn" data-action="pot">1/2 底池</button>
+                        <button class="shortcut-btn" data-action="pot-full">底池</button>
+                        <button class="shortcut-btn" data-action="allin">All In</button>
+                    </div>
+                    <div class="raise-confirm-area">
+                        <button id="confirm-raise" class="btn primary">确认加注</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
