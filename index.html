@@ -8,9 +8,39 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/settings.css">
 </head>
 <body>
     <div id="app">
+        <!-- Settings Button -->
+        <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
+        
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>设置</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <ul class="settings-menu">
+                        <li class="settings-item active" data-target="game-settings">游戏设置</li>
+                        <li class="settings-item" data-target="audio-settings">音量设置</li>
+                        <li class="settings-item" data-target="ai-settings">AI设置</li>
+                        <li class="settings-item" data-target="network-settings">联机设置</li>
+                        <li class="settings-item" data-target="about">关于</li>
+                    </ul>
+                    <div class="settings-panels">
+                        <div id="game-settings" class="panel active">游戏设置内容...</div>
+                        <div id="audio-settings" class="panel">音量设置内容...</div>
+                        <div id="ai-settings" class="panel">AI设置内容...</div>
+                        <div id="network-settings" class="panel">联机设置内容...</div>
+                        <div id="about" class="panel">关于本游戏...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="game-table">
             <div id="community-cards" class="community-area">
                 <!-- Community cards will go here -->
@@ -41,6 +71,8 @@
     <script src="js/player.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/settings.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
+<!-- Copilot test comment -->
