@@ -80,6 +80,26 @@
     border-radius: 5px;
 }
 
+/* Deck Pile - Left of Community Cards */
+#deck-pile {
+    position: absolute;
+    top: 50%;
+    /* Position to the left of community cards */
+    /* Community cards width approx: (60+10)*5 + 30 = 380px. Half is 190. */
+    /* So left of center should be -190 - deck width - spacing */
+    left: calc(50% - 280px); 
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 90px;
+    z-index: 5;
+}
+
+#deck-pile .card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
 /* Player Seats Layout */
 #players-area {
     position: absolute;
@@ -304,6 +324,17 @@
     margin: 0 2px;
     position: relative;
     border: 1px solid #ccc;
+    
+    /* Animation base styles */
+    transition: transform 0.5s ease-out;
+}
+
+/* Flying Card for Animation */
+.flying-card {
+    position: fixed; /* Fixed relative to viewport to fly anywhere */
+    z-index: 1000;
+    pointer-events: none;
+    transition: all 0.5s ease-out;
 }
 
 .card.red {

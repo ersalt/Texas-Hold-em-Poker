@@ -9,9 +9,29 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/start.css">
 </head>
 <body>
-    <div id="app">
+    <!-- Start Page -->
+    <div id="start-page">
+        <div class="start-left">
+            <div id="clock-container">
+                <div id="time-display">00:00</div>
+                <div id="date-display">2024年1月1日 星期一</div>
+            </div>
+            <div id="greeting-display">你好，欢迎回来</div>
+        </div>
+        <div class="start-right">
+            <h1>德州扑克</h1>
+            <div class="room-selection">
+                <button class="room-btn" data-room="1">初级场 (Min 100)</button>
+                <button class="room-btn" data-room="2">中级场 (Min 500)</button>
+                <button class="room-btn" data-room="3">高级场 (Min 2000)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
         <!-- Settings Button -->
         <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
         
@@ -68,6 +88,15 @@
         </div>
 
         <div id="game-table">
+            <button id="btn-back-home" class="back-btn">🏠 返回大厅</button>
+            
+            <!-- Deck Pile -->
+            <div id="deck-pile" class="deck-area">
+                <div class="card back"></div>
+                <div class="card back" style="position: absolute; top: -2px; left: -2px;"></div>
+                <div class="card back" style="position: absolute; top: -4px; left: -4px;"></div>
+            </div>
+
             <div id="community-cards" class="community-area">
                 <!-- Community cards will go here -->
                 <div class="card-slot"></div>

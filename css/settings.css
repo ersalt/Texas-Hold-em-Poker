@@ -124,6 +124,16 @@
     padding: 20px;
     background-color: #fff;
     overflow-y: auto;
+    color: #2c3e50; /* Ensure text is dark on white background */
+}
+
+.settings-panels a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.settings-panels a:hover {
+    text-decoration: underline;
 }
 
 .panel {

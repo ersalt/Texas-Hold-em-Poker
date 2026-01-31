@@ -12,6 +12,11 @@ class Game {
     init() {
         this.ui.log("Game Initializing...");
         
+        // Reset state
+        this.players = [];
+        this.communityCards = [];
+        this.deck = new Deck(); // Fresh deck
+        
         // Setup 10 Players using user settings (nickname and initial chips)
         const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000, aiChips: 1000};
 
@@ -43,19 +48,45 @@ class Game {
         this.ui.log("Game Started. Dealing hole cards.");
     }
 
-    dealHoleCards() {
-        // Deal 2 cards to each player
-        for (let i = 0; i < 2; i++) {
-            this.players.forEach(player => {
-                player.receiveCard(this.deck.deal());
-            });
-        }
-        
-        // Update UI for all players
-        this.players.forEach((player, index) => {
-            // Player 0 is human, cards face up. Others face down.
-            const isFaceUp = (index === 0);
-            this.ui.renderCards(player.hand, `hand-${index}`, isFaceUp);
+    async dealHoleCards() {
+        // Clear existing hands in UI first (in case of restart)
+        this.players.forEach((_, index) => {
+            const container = document.getElementById(`hand-${index}`);
+            if (container) container.innerHTML = '';
         });
+
+        // Deal 2 cards to each player sequentially with animation
+        // Order: Small Blind -> Big Blind -> ... -> Dealer (Standard is start left of Dealer)
+        // For simplicity in this array-based setup, we'll just go 0-9 twice
+        // Or strictly: We should deal card 1 to all players, then card 2 to all players
+        
+        // Note: Our Dealer is index 5. So start at index 6, loop to 9, then 0 to 5.
+        // Let's just do 0-9 for simplicity as requested, or maybe realistic order.
+        // Let's do simple 0-9 loop for visual clarity.
+
+        const dealOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // Can be rotated based on Dealer button
+        
+        // Card 1
+        for (const playerIndex of dealOrder) {
+            const player = this.players[playerIndex];
+            const card = this.deck.deal();
+            player.receiveCard(card);
+            
+            // Animate
+            // Player 0 is human, cards face up. Others face down.
+            // Wait for animation to finish before moving to next player? Or rapid fire?
+            // "Rapid fire with small delay" looks best.
+            await this.ui.animateDeal(playerIndex, card, playerIndex === 0, 0);
+            // await new Promise(r => setTimeout(r, 100)); // 100ms gap between cards
+        }
+
+        // Card 2
+        for (const playerIndex of dealOrder) {
+            const player = this.players[playerIndex];
+            const card = this.deck.deal();
+            player.receiveCard(card);
+            
+            await this.ui.animateDeal(playerIndex, card, playerIndex === 0, 0);
+        }
     }
 }

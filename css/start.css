@@ -1,0 +1,151 @@
+/* Start Page Styles */
+#start-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #203a43, #2c5364); /* Cooler, more professional dark teal/blue gradient */
+    display: flex;
+    z-index: 2000; /* Above everything */
+    transition: opacity 0.5s ease-in-out;
+}
+
+#start-page.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+/* Left Panel - Info */
+.start-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 10%;
+    color: white;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+#clock-container {
+    margin-bottom: 40px;
+}
+
+#time-display {
+    font-size: 5rem;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+#date-display {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+#greeting-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Right Panel - Game Selection */
+.start-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.start-right h1 {
+    font-size: 4rem;
+    margin-bottom: 60px;
+    color: #f1c40f;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    letter-spacing: 5px;
+}
+
+.room-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 300px;
+}
+
+.room-btn {
+    padding: 20px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 50px; /* Pill shape */
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(5px);
+}
+
+.room-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    border-color: #f1c40f;
+}
+
+
+/* Hide main app initially */
+#app.hidden {
+    display: none;
+}
+
+/* Back Button in Game */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 8px 15px;
+    background: rgba(0,0,0,0.6);
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(0,0,0,0.8);
+    color: white;
+    border-color: #777;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 900px) {
+    #start-page {
+        flex-direction: column;
+    }
+    
+    .start-left {
+        flex: 0 0 40%;
+        padding-left: 0;
+        align-items: center;
+        text-align: center;
+        background: rgba(0,0,0,0.2);
+    }
+    
+    .start-right {
+        flex: 1;
+        background: rgba(0,0,0,0.4);
+    }
+    
+    #time-display { font-size: 3.5rem; }
+    #greeting-display { font-size: 1.8rem; }
+    .start-right h1 { font-size: 3rem; margin-bottom: 30px; }
+}
