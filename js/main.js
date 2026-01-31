@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Texas Hold'em Poker - System Ready");
     
-    // Initialize Game
-    const game = new Game();
-    game.init();
+    // Initialize Game and expose to window so settings can modify it
+    window.game = new Game();
+    window.game.init();
 });

@@ -31,7 +31,26 @@
                         <li class="settings-item" data-target="about">关于</li>
                     </ul>
                     <div class="settings-panels">
-                        <div id="game-settings" class="panel active">游戏设置内容...</div>
+                        <div id="game-settings" class="panel active">
+                            <form id="game-settings-form" class="settings-form">
+                                <div class="settings-group">
+                                    <label for="setting-nickname">昵称（显示名）</label>
+                                    <input id="setting-nickname" type="text" maxlength="12" placeholder="我">
+                                </div>
+                                <div class="settings-group">
+                                    <label for="setting-player-chips">玩家初始筹码</label>
+                                    <input id="setting-player-chips" type="number" min="1" step="1" value="1000">
+                                </div>
+                                <div class="settings-group">
+                                    <label for="setting-ai-chips">人机初始筹码</label>
+                                    <input id="setting-ai-chips" type="number" min="1" step="1" value="1000">
+                                </div>
+                                <div class="settings-actions">
+                                    <button type="button" id="save-settings" class="btn primary">保存</button>
+                                    <button type="button" id="reset-settings" class="btn">重置</button>
+                                </div>
+                            </form>
+                        </div>
                         <div id="audio-settings" class="panel">音量设置内容...</div>
                         <div id="ai-settings" class="panel">AI设置内容...</div>
                         <div id="network-settings" class="panel">联机设置内容...</div>
@@ -75,4 +94,3 @@
     <script src="js/main.js"></script>
 </body>
 </html>
-<!-- Copilot test comment -->

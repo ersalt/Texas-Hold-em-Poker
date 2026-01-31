@@ -12,13 +12,15 @@ class Game {
     init() {
         this.ui.log("Game Initializing...");
         
-        // Setup 10 Players
+        // Setup 10 Players using user settings (nickname and initial chips)
+        const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000, aiChips: 1000};
+
         // Player 0 is Human
-        this.players.push(new Player("我")); 
+        this.players.push(new Player(settings.nickname, false, Number(settings.playerChips)));
         
         // Players 1-9 are AI
         for (let i = 1; i < 10; i++) {
-            this.players.push(new Player(`玩家 ${i}`, true));
+            this.players.push(new Player(`玩家 ${i}`, true, Number(settings.aiChips)));
         }
 
         // Assign initial roles for demo purposes (Dealer, SB, BB)
