@@ -109,6 +109,7 @@ class Game {
     async startGame() {
         this.ui.log("--- New Hand ---");
         this.ui.reset();
+        this.deck.init(); // Reset deck
         this.deck.shuffle();
         this.communityCards = [];
         this.pot = 0;
@@ -180,6 +181,7 @@ class Game {
         this.pot += actual;
         this.ui.updateBalance(this.players);
         this.ui.updatePot(this.pot);
+        this.ui.updatePlayerBet(playerIndex, actual); // Update visual bet
         this.ui.log(`${player.name} posts blind ${actual}`);
     }
 
@@ -192,7 +194,14 @@ class Game {
         // So logic: getNextPlayerIndex(sbIndex, i)
         
         for (let i = 0; i < 10; i++) {
-            dealOrder.push(this.getNextPlayerIndex(sbIndex, i));
+            const pIdx = this.getNextPlayerIndex(sbIndex, i);
+            // Only deal to players with chips
+            if (this.players[pIdx].chips > 0) {
+                dealOrder.push(pIdx);
+            } else {
+                // Mark players with 0 chips as folded/inactive so they are skipped in logic
+                this.players[pIdx].folded = true;
+            }
         }
 
         // Card 1
@@ -302,7 +311,9 @@ class Game {
 
                 let action = null;
                 if (player.isAI) {
-                    await new Promise(r => setTimeout(r, 500)); 
+                    // Random delay 1-3 seconds
+                    const delay = 1000 + Math.random() * 2000;
+                    await new Promise(r => setTimeout(r, delay)); 
                     action = this.getAIAction(player, highestBet);
                 } else {
                     this.enableControls(highestBet, player.currentBet);
@@ -338,12 +349,14 @@ class Game {
         document.querySelectorAll('.player-seat').forEach(s => s.classList.remove('active-turn'));
     }
     
-    processAction(player, action, highestBet) {
+    async processAction(player, action, highestBet) {
         this.ui.log(`${player.name}: ${action.type} ${action.amount || ''}`);
         
+        // Handle logic & animation
         switch (action.type) {
             case 'fold':
                 player.folded = true;
+                // Maybe dim player
                 break;
             case 'check':
                 this.ui.playSound('过牌1.mp3');
@@ -354,7 +367,13 @@ class Game {
                 player.chips -= callAmt;
                 player.currentBet += callAmt;
                 this.pot += callAmt;
-                this.ui.playSound('下注1.mp3');
+                this.ui.updateBalance(this.players); // Update chips immediately for visual correctness
+                
+                // Animate chips
+                await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
+                this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
+                
+                // this.ui.playSound('下注1.mp3'); // Sound handled in animation
                 break;
             case 'raise':
                 let totalBet = action.amount;
@@ -367,7 +386,13 @@ class Game {
                 let raiseDiff = totalBet - this.currentBet;
                 if (raiseDiff > 0) this.lastRaise = raiseDiff;
                 this.currentBet = totalBet;
-                this.ui.playSound('下注2.mp3');
+                this.ui.updateBalance(this.players);
+
+                // Animate chips
+                await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
+                this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
+                
+                // this.ui.playSound('下注2.mp3'); // Sound handled in animation? (Maybe override)
                 break;
              case 'allin':
                  let allInAmt = player.chips;
@@ -379,10 +404,16 @@ class Game {
                      this.lastRaise = Math.max(this.lastRaise, diff);
                      this.currentBet = player.currentBet;
                  }
+                 this.ui.updateBalance(this.players);
+                 
+                 // Animate chips
+                 await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
+                 this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
+                 
                  this.ui.playSound('all in.mp3');
                  break;
         }
-        this.ui.updateBalance(this.players);
+        // Pot update logic
         this.ui.updatePot(this.pot);
     }
     
@@ -520,10 +551,16 @@ class Game {
         this.distributePot(winners);
     }
     
-    distributePot(winners) {
+    async distributePot(winners) {
         const share = Math.floor(this.pot / winners.length);
         this.ui.log(`Winner(s): ${winners.map(w=>w.name).join(', ')} win $${share}`);
         
+        // Animate Pot to Winner(s)
+        // If multiple, just animate to first for now or loop
+        for (const w of winners) {
+            await this.ui.animatePotWin(this.players.indexOf(w));
+        }
+
         winners.forEach(w => {
             w.chips += share;
         });

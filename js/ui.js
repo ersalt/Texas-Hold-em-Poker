@@ -58,6 +58,14 @@ class UI {
             const handEl = document.createElement('div');
             handEl.className = 'hand-cards';
             handEl.id = `hand-${index}`;
+            
+            // Bet Chips Display (Hidden initially)
+            const betChips = document.createElement('div');
+            betChips.className = 'chip-stack bet-chips hidden';
+            betChips.id = `bet-chips-${index}`;
+            
+            // Append Bet Chips to Hand Element for relative positioning
+            handEl.appendChild(betChips);
 
             seatEl.appendChild(avatar);
             seatEl.appendChild(info);
@@ -247,35 +255,234 @@ class UI {
 
     updatePot(amount) {
         const potDisplay = document.getElementById('pot-display');
+        const potChips = document.getElementById('pot-chips');
+        
         if (potDisplay) {
             potDisplay.textContent = `底池（POT）：$${amount}`;
         }
+
+        if (potChips) {
+            if (amount <= 0) {
+                potChips.classList.add('hidden');
+                potChips.innerText = '';
+            } else {
+                potChips.classList.remove('hidden');
+                potChips.innerText = this.formatChipText(amount);
+                this.updateChipStyle(potChips, amount);
+            }
+        }
+    }
+
+    // Helper to format chip text (e.g., 1k for 1000 if needed, but requirements say 1-1000 so maybe just number)
+    formatChipText(amount) {
+        if (amount >= 10000) return (amount / 1000).toFixed(1) + 'k';
+        return amount;
+    }
+
+    // Helper to update chip style based on amount
+    updateChipStyle(element, amount) {
+        // Clear previous content
+        element.innerHTML = '';
+        
+        // Add text label
+        const text = document.createElement('div');
+        text.className = 'chip-text';
+        text.innerText = this.formatChipText(amount);
+        element.appendChild(text);
+
+        // Determine stack size (Small, Medium, Large)
+        let count = 0;
+        if (amount >= 5000) {
+            count = 8; // Big stack
+        } else if (amount >= 1001) {
+            count = 5; // Medium stack
+        } else {
+            count = 2; // Small stack
+        }
+
+        // Generate chips with random colors
+        const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6']; // Red, Blue, Gold, Green, Purple
+        
+        for (let i = 0; i < count; i++) {
+            const chip = document.createElement('div');
+            chip.className = 'chip-token';
+            // Random color
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            chip.style.backgroundColor = randomColor;
+            
+            // Stack them vertically with slight random offset
+            const offsetY = -i * 3; 
+            const offsetX = (Math.random() - 0.5) * 4; 
+            
+            chip.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            chip.style.zIndex = i;
+            
+            element.appendChild(chip);
+        }
+    }
+
+    // Show Betting Chips for a Player
+    updatePlayerBet(playerIndex, amount) {
+        const chipEl = document.getElementById(`bet-chips-${playerIndex}`);
+        if (!chipEl) return;
+
+        if (amount <= 0) {
+            chipEl.classList.add('hidden');
+            chipEl.innerHTML = '';
+        } else {
+            chipEl.classList.remove('hidden');
+            this.updateChipStyle(chipEl, amount);
+        }
+    }
+
+    clearPlayerBets() {
+        document.querySelectorAll('.bet-chips').forEach(el => {
+            el.classList.add('hidden');
+            el.innerText = '';
+        });
+    }
+
+    // Animation for Betting
+    animateBet(playerIndex, amount) {
+        // Only animate if amount > 0
+        if (amount <= 0) return Promise.resolve();
+
+        return new Promise(resolve => {
+            const playerSeat = document.getElementById(`seat-${playerIndex}`);
+            const chipEl = document.getElementById(`bet-chips-${playerIndex}`);
+            
+            if (!playerSeat || !chipEl) {
+                resolve();
+                return;
+            }
+
+            // Create flying chip
+            const flyingChip = document.createElement('div');
+            flyingChip.className = 'chip-stack flying-chip';
+            this.updateChipStyle(flyingChip, amount);
+            // text added by updateChipStyle
+            
+            document.body.appendChild(flyingChip);
+
+            // Start position (Player Avatar Center)
+            const avatar = playerSeat.querySelector('.avatar');
+            const startRect = avatar.getBoundingClientRect();
+            
+            flyingChip.style.left = `${startRect.left + startRect.width/2 - 20}px`; 
+            flyingChip.style.top = `${startRect.top + startRect.height/2 - 20}px`;
+
+            // Force reflow
+            flyingChip.offsetHeight;
+
+            // End position (Bet Chips Location)
+            const wasHidden = chipEl.classList.contains('hidden');
+            if (wasHidden) {
+                chipEl.classList.remove('hidden'); 
+                chipEl.style.opacity = '0'; 
+            }
+            
+            const targetRect = chipEl.getBoundingClientRect();
+            
+            if (wasHidden) {
+                chipEl.classList.add('hidden');
+                chipEl.style.opacity = '1';
+            }
+
+            const endLeft = targetRect.left;
+            const endTop = targetRect.top;
+
+            // Animate
+            const currentLeft = parseFloat(flyingChip.style.left);
+            const currentTop = parseFloat(flyingChip.style.top);
+            
+            flyingChip.style.transform = `translate(${endLeft - currentLeft}px, ${endTop - currentTop}px)`;
+
+            this.playSound('下注1.mp3'); 
+
+            setTimeout(() => {
+                document.body.removeChild(flyingChip);
+                resolve();
+            }, 600);
+        });
+    }
+
+    // Animation for Pot to Winner
+    animatePotWin(winnerIndex) {
+        return new Promise(resolve => {
+            const potChips = document.getElementById('pot-chips');
+            const winnerSeat = document.getElementById(`seat-${winnerIndex}`);
+            
+            if (!potChips || !winnerSeat) {
+                resolve();
+                return;
+            }
+
+            const potRect = potChips.getBoundingClientRect();
+            const winnerRect = winnerSeat.getBoundingClientRect();
+
+            // Clone pot chips
+            const flyingPot = potChips.cloneNode(true);
+            flyingPot.className = 'chip-stack flying-chip';
+            // Ensure clone is positioned correctly fixed
+            flyingPot.style.position = 'fixed';
+            flyingPot.style.left = `${potRect.left}px`;
+            flyingPot.style.top = `${potRect.top}px`;
+            flyingPot.style.transform = 'none';
+            flyingPot.style.margin = '0';
+            
+            document.body.appendChild(flyingPot);
+            
+            // Hide real pot
+            potChips.classList.add('hidden');
+
+            flyingPot.offsetHeight;
+
+            // Target: Winner Avatar
+            const endLeft = winnerRect.left + winnerRect.width/2 - 20; 
+            const endTop = winnerRect.top + winnerRect.height/2 - 20;
+
+            flyingPot.style.transition = 'all 1s ease-in-out';
+            flyingPot.style.transform = `translate(${endLeft - potRect.left}px, ${endTop - potRect.top}px)`;
+            
+            this.playSound('all in.mp3'); 
+
+            setTimeout(() => {
+                document.body.removeChild(flyingPot);
+                resolve();
+            }, 1000);
+        });
     }
 
     reset() {
         // Clear community cards
         if (this.communityCardsArea) {
-            // Keep the slots, clear content if any? 
-            // Actually the slots are structural. We should probably clear cards inside them if we appended them there.
-            // But currently renderCards clears innerHTML.
-            // If we are just resetting for a new hand or lobby return:
             const slots = this.communityCardsArea.querySelectorAll('.card-slot');
             slots.forEach(slot => slot.innerHTML = '');
-            // Also clear direct children if we used appendChild
-            this.communityCardsArea.innerHTML = `
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-                <div class="card-slot"></div>
-            `;
+            // We do NOT reset innerHTML completely because we added pot-container
         }
 
-        // Clear player hands
-        document.querySelectorAll('.hand-cards').forEach(el => el.innerHTML = '');
+        // Clear player hands BUT keep bet chips structure
+        document.querySelectorAll('.hand-cards').forEach(el => {
+            // Remove cards but keep bet chips div
+            const cards = el.querySelectorAll('.card');
+            cards.forEach(card => card.remove());
+            
+            // Reset bet chips
+            const betChips = el.querySelector('.bet-chips');
+            if (betChips) {
+                betChips.classList.add('hidden');
+                betChips.innerText = '';
+            }
+        });
 
         // Reset Pot Display
         this.updatePot(0);
+        
+        // Clear any betting chips on table (if any remained)
+        document.querySelectorAll('.bet-chips').forEach(el => {
+            el.classList.add('hidden');
+            el.innerText = '';
+        });
     }
 
     // Raise Control UI

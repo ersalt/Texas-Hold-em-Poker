@@ -61,16 +61,45 @@
 
 /* Community Cards Area (Center) */
 #community-cards {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative; /* Changed from absolute to relative for flex alignment */
+    /* Removed top/left transforms as it's now in a container */
     display: flex;
     gap: 10px;
     padding: 15px;
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Container for Community Cards + Pot Chips */
+#community-cards-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between cards and pot chips */
+}
+
+/* Pot Container */
+#pot-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 100px;
+}
+
+/* Pot Display Text */
+#pot-display {
+    color: #f1c40f;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 .card-slot {
@@ -374,4 +403,99 @@
         transparent 20px
     );
     border: 2px solid white;
+}
+
+/* Chip Styles */
+.chip-stack {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Individual Chip Token */
+.chip-token {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    border: 2px dashed rgba(255,255,255,0.7);
+    /* Colors will be set via inline styles or specific classes if needed, 
+       but requirement says random colors */
+}
+
+/* Text on top of stack */
+.chip-text {
+    position: absolute;
+    top: -15px; /* Above stack */
+    background-color: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 55;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-stack.hidden {
+    display: none;
+}
+
+/* Pot Chips - relative positioning inside pot-container */
+.pot-stack {
+    position: relative;
+    margin-bottom: 5px;
+    height: 40px; /* Reserve space */
+}
+
+/* Player Betting Chips Position */
+/* Seats 0, 1, 4, 5, 6, 7, 8, 9: Right of 2nd card */
+/* These players are generally top/bottom or left corners */
+/* We position relative to the HAND container */
+
+/* Default positioning (Right of hand) */
+.bet-chips {
+    position: absolute;
+    z-index: 50;
+    /* Adjust based on requirement */
+}
+
+/* Seats 0, 1, 4, 5, 6, 7, 8, 9 */
+/* Hand width is roughly 2 cards (50px) + gaps. Let's say ~110px. */
+/* Right of 2nd card means to the right of the hand container. */
+.seat-0 .bet-chips,
+.seat-1 .bet-chips,
+.seat-4 .bet-chips,
+.seat-5 .bet-chips,
+.seat-6 .bet-chips,
+.seat-7 .bet-chips,
+.seat-8 .bet-chips,
+.seat-9 .bet-chips {
+    top: 50%;
+    left: 100%; /* Right of hand */
+    transform: translateY(-50%) translateX(10px); /* 10px spacing */
+}
+
+/* Seats 2, 3: Left of 1st card */
+/* These are right-side players */
+.seat-2 .bet-chips,
+.seat-3 .bet-chips {
+    top: 50%;
+    right: 100%; /* Left of hand */
+    transform: translateY(-50%) translateX(-10px); /* 10px spacing */
+    left: auto;
+}
+
+/* Flying Chips Animation */
+.flying-chip {
+    position: fixed;
+    z-index: 1000;
+    transition: all 0.6s ease-in-out;
+    pointer-events: none;
 }
