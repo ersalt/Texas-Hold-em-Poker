@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单机德州扑克 (Texas Hold'em)</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+    <div id="app">
+        <div id="game-table">
+            <div id="community-cards" class="community-area">
+                <!-- Community cards will go here -->
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+            </div>
+
+            <div id="players-area">
+                <!-- Players will be positioned here -->
+            </div>
+
+    <div id="controls">
+                <button id="btn-fold" class="game-btn fold">弃牌 (Fold)</button>
+                <button id="btn-check" class="game-btn check">过牌 (Check)</button>
+                <button id="btn-call" class="game-btn call">跟注 (Call)</button>
+                <button id="btn-raise" class="game-btn raise">加注 (Raise)</button>
+                <button id="btn-allin" class="game-btn allin">全押 (All In)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (Order matters) -->
+    <script src="js/utils.js"></script>
+    <script src="js/deck.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
