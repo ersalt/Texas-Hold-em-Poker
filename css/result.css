@@ -1,0 +1,195 @@
+/* Result Modal Styles */
+#result-modal .result-content {
+    background-color: #2c3e50; /* Main Blue Theme */
+    border: 4px solid #34495e; /* Slightly lighter border */
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+#result-modal .result-header {
+    background-color: #34495e;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 2px solid #1abc9c; /* Green/Teal accent */
+}
+
+#result-modal .result-header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.5rem;
+    text-shadow: 1px 1px 2px black;
+}
+
+#result-modal .result-body {
+    padding: 20px;
+    background-color: transparent;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+#result-modal .result-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#result-modal .result-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#result-modal .header-row {
+    background-color: #34495e;
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+#result-modal .result-row.winner-row {
+    background-color: rgba(26, 188, 156, 0.2); /* Teal with opacity */
+    border: 1px solid #1abc9c;
+}
+
+/* Columns */
+#result-modal .col-player {
+    flex: 1.5;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#result-modal .col-hand {
+    flex: 2;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+#result-modal .col-bet {
+    flex: 1;
+    text-align: center;
+}
+
+#result-modal .col-win {
+    flex: 1;
+    text-align: right;
+    color: #1abc9c; /* Green/Teal for winnings */
+    font-weight: bold;
+}
+
+#result-modal .result-footer {
+    padding: 15px;
+    text-align: center;
+    border-top: 2px solid #34495e;
+    background-color: #2c3e50;
+}
+
+#result-modal #btn-result-confirm {
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#result-modal #btn-result-confirm:hover {
+    background-color: #16a085;
+    transform: scale(1.05);
+}
+
+/* Card Icons in Hand Column */
+.hand-preview {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: middle;
+}
+
+.mini-card {
+    width: 20px;
+    height: 28px;
+    background-color: white;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: black;
+    border: 1px solid #999;
+}
+
+.mini-card.red {
+    color: red;
+}
+
+.hand-desc {
+    font-size: 0.8em;
+    color: #eee;
+    margin-left: 5px;
+}
+
+/* Game Over Modal Styles */
+#game-over-modal .game-over-content {
+    background-color: #2c3e50;
+    border: 4px solid #f39c12; /* Orange border */
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    color: #fff;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+}
+
+#game-over-modal .result-header {
+    background-color: #d35400; /* Darker orange header */
+    border-bottom: 2px solid #f39c12;
+}
+
+#game-over-modal .game-over-message {
+    text-align: center;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    padding: 20px 10px;
+}
+
+#game-over-modal .result-footer {
+    border-top: none; /* Remove separator line */
+    background-color: #2c3e50;
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    padding-bottom: 20px;
+}
+
+#game-over-modal #btn-game-over-confirm {
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#game-over-modal #btn-game-over-confirm:hover {
+    background-color: #e67e22;
+    transform: scale(1.05);
+}
