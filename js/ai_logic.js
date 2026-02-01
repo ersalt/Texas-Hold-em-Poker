@@ -1,6 +1,7 @@
 /**
  * AI Logic Controller
  * Implements advanced decision making for Poker Bot based on difficulty levels
+ *  修正版：修复了 Call Threshold 与 VPIP 关系颠倒的问题
  */
 
 class AILogic {
@@ -20,8 +21,7 @@ class AILogic {
         // 1. Calculate Hand Strength
         const handStrength = this.calculateHandStrength(holeCards, communityCards, stage);
         
-        // 2. Short Stack Logic check (< 20BB logic is handled by is_short_stack flag in params, or dynamic calc)
-        // The params calculation already sets 'is_short_stack' if bb_depth < 20
+        // 2. Short Stack Logic check
         if (params.is_short_stack) {
             return this.shortStackLogic(handStrength, stack, toCall);
         }
@@ -38,73 +38,15 @@ class AILogic {
         
         // Case: No one bet yet (toCall == 0)
         if (toCall <= 0) {
-            // Open Bet Threshold = Playable Range * Position Factor
-            // Position Factor: Late positions (High factor) should make threshold LOWER? 
-            // Wait, usually Late position = wider range = lower threshold.
-            // My getPositionFactor returns > 1 for Late.
-            // If threshold = range * factor, then Late (1.3) * 0.5 = 0.65 (Stricter?)
-            // Usually we want Late to be looser.
-            // Let's invert the logic or adjust factor.
-            // User pseudocode: open_threshold = params.playable_range * GetPositionFactor(ai.position, stage)
-            // Let's assume User's GetPositionFactor returns < 1 for Late?
-            // "playable_range" is "top X% hands". e.g. 0.55 means top 55%.
-            // If HandStrength is 0-1 where 1 is best.
-            // If I have top 55% hands, that means strength > (1 - 0.55) = 0.45?
-            // Or does playable_range mean "Min Strength required"?
-            // "playable_range: 0.55 // 可玩前55%起手牌" -> This suggests VPIP.
-            // If HandStrength is absolute (0-1), then a lower threshold means wider range.
-            // So for Late position, we want LOWER threshold.
-            // So OpenThreshold = BaseThreshold / PositionFactor.
-            
-            // Let's interpret "playable_range" as "Minimum Strength to Play". 
-            // T0 (Tight) has playable_range 0.55? Wait.
-            // T0 (Aggressive/Strong): playable_range 0.55 (Wider?)
-            // T2 (Weak): playable_range 0.30 (Tighter?) 
-            // Usually Fish play wide (High VPIP). T2 VPIP is 0.22 (Low?).
-            // The provided config: T0 VPIP 0.45 (Loose/Aggro), T2 VPIP 0.22 (Tight/Passive).
-            
-            // So T0 plays more hands. Threshold should be lower.
-            // If playable_range = 0.55. Does it mean Strength > 0.45?
-            // Let's stick to the user's pseudo-code structure but adapt the math to make sense.
-            // User: IF hand_strength > open_threshold
-            // User: open_threshold = params.playable_range * GetPositionFactor
-            // If T0 range is 0.55. If factor is 1. 0.55 threshold.
-            // If T2 range is 0.30. Threshold 0.30.
-            // This would mean T2 plays MORE hands (anything > 0.3) than T0 (> 0.55).
-            // This contradicts T0 VPIP 0.45 vs T2 VPIP 0.22.
-            
-            // INTERPRETATION: params.playable_range is actually "1 - Threshold" or similar "Percentile".
-            // But let's look at the check: hand_strength > open_threshold.
-            // To match VPIP 0.45 (T0), we need threshold around 0.55 (assuming uniform distribution).
-            // To match VPIP 0.22 (T2), we need threshold around 0.78.
-            
-            // The user's `playable_range` values are: T0: 0.55, T1: 0.40, T2: 0.30.
-            // If I use `threshold = 1 - params.playable_range`:
-            // T0: 1 - 0.55 = 0.45. Strength > 0.45. (Matches VPIP ~45%)
-            // T2: 1 - 0.30 = 0.70. Strength > 0.70. (Matches VPIP ~30%)
-            // This makes perfect sense.
-            
-            // Position Factor:
-            // Late Position -> Play looser -> Lower Threshold.
-            // My PositionFactor: Early 0.8, Late 1.3.
-            // So: threshold = (1 - params.playable_range) / positionFactor.
-            
+            // Open Bet Threshold
+            // playable_range: 可玩前 X% 起手牌 (如 0.55 = 前 55%)
+            // 阈值 = 1 - playable_range → 值越低表示玩得越松
+            // Late 位置 (factor > 1) → 阈值更低 → 范围更宽 ✅
             const baseThreshold = 1.0 - params.playable_range;
             const openThreshold = baseThreshold / positionFactor;
             
             if (handStrength > openThreshold) {
-                // Raise Size affected by PFR (Aggression)
-                // params.pfr is 0.15 - 0.28.
-                // User Logic: raise_size = CalculateRaiseSize(stage, pot_size, params.pfr)
-                
-                // Let's calculate a raise amount
-                // More PFR -> Larger raise? Or just frequency?
-                // Logic: Raise amount usually relative to pot.
-                // PFR is PreFlop Raise frequency. 
-                // Let's use pfr as a scalar for sizing? 
-                // Or maybe just random bet within range?
-                
-                // My interpretation: Raise between Min and (Pot * (1 + pfr))
+                // Raise Size influenced by PFR (Pre-Flop Raise frequency)
                 const maxBet = potSize * (1 + params.pfr * 2); 
                 return { type: 'raise', amount: this.calculateRaiseAmount(maxBet, highestBet) };
             } else {
@@ -116,23 +58,14 @@ class AILogic {
             // Pot Odds = Call Amount / (Total Pot after Call)
             const potOdds = toCall / (potSize + toCall);
             
-            // Call Threshold influenced by VPIP
-            // User: call_threshold = 0.35 * (0.8 + params.vpip * 0.5)
-            // T0 (VPIP 0.45) -> 0.35 * (0.8 + 0.225) = 0.35 * 1.025 = 0.36
-            // T2 (VPIP 0.22) -> 0.35 * (0.8 + 0.11) = 0.35 * 0.91 = 0.31
-            // T0 (Aggro) requires HIGHER strength to Call? (Maybe prefers raising?)
-            // Or maybe strictness. 
-            // Let's just use the formula provided.
-            const callThreshold = 0.35 * (0.8 + params.vpip * 0.5);
+            //  修正：VPIP 越高 → 跟注阈值越低（玩得更松）
+            // T0 (VPIP=0.45) → 0.365 | T2 (VPIP=0.22) → 0.434
+            const callThreshold = Math.max(0.25, 0.5 - params.vpip * 0.3);
             
             if (handStrength > callThreshold && handStrength > potOdds) {
-                // Check for 3-Bet / Raise
-                // User: three_bet_threshold = 0.70 * (0.9 - params.three_bet * 0.3)
-                // T0 (3bet 0.05) -> 0.7 * (0.9 - 0.015) = 0.62
-                // T2 (3bet 0.20) -> 0.7 * (0.9 - 0.06) = 0.58
-                // T2 raises with weaker hands? (Aggressive Fish?)
-                
-                const threeBetThreshold = 0.70 * (0.9 - params.three_bet * 0.3);
+                //  修正：three_bet 越高 → 3-bet 阈值越低（更激进）
+                // T0 (3bet=0.05) → 0.71 | T2 (3bet=0.20) → 0.60
+                const threeBetThreshold = Math.max(0.5, 0.75 - params.three_bet * 0.3);
                 
                 if (handStrength > threeBetThreshold && Math.random() < params.three_bet) {
                     return { type: 'raise', amount: this.calculateRaiseAmount(toCall * 2.8, highestBet) };
@@ -154,27 +87,20 @@ class AILogic {
 
     randomWeakDecision(handStrength, toCall, stack) {
         // 20% probability to Fold Strong or Call Weak (Mistake)
-        // Strong defined as > 0.7
         if (handStrength > 0.7) {
-            return { type: 'fold' }; // Big Mistake
+            return { type: 'fold' }; // Big Mistake: 强牌弃牌
         } else {
             // Call with weak hand
-            // If toCall is huge (Allin), maybe don't suicide completely unless very high error rate?
-            // But "mistake" implies doing it anyway.
             if (toCall < stack) {
-                return { type: 'call' };
+                return { type: 'call' }; // Mistake: 弱牌跟注
             } else {
-                return { type: 'fold' }; // Save from all-in suicide on error?
+                return { type: 'fold' }; // 避免全下自杀
             }
         }
     }
 
     shortStackLogic(handStrength, stack, toCall) {
-        // User Logic:
-        // > 0.75 -> All In
-        // > 0.60 AND toCall < 30% Stack -> Call
-        // Else -> Fold
-        
+        // Short stack logic: 全下/跟注/弃牌
         if (handStrength > 0.75) {
             return { type: 'allin' };
         } else if (handStrength > 0.60 && toCall < stack * 0.3) {
@@ -196,7 +122,7 @@ class AILogic {
         const max = min + this.game.pot; // Reasonable Cap
         let amount = Math.max(min, targetAmount);
         
-        // Add some randomness so AI doesn't bet exact formulas always
+        // Add randomness to avoid predictable betting patterns
         amount = amount * (0.9 + Math.random() * 0.2);
         
         return Math.floor(amount);
@@ -229,15 +155,6 @@ class AILogic {
             const currentEval = evaluateHand([...hole, ...board]);
             
             // Normalize score (0 - ~9M) to 0.0 - 1.0
-            // High Card: 0 - 1M -> 0.0 - 0.2
-            // Pair: 1M - 2M -> 0.2 - 0.4
-            // Two Pair: 2M - 3M -> 0.4 - 0.5
-            // Three of a Kind: 3M - 4M -> 0.5 - 0.6
-            // Straight: 4M - 5M -> 0.6 - 0.7
-            // Flush: 5M - 6M -> 0.7 - 0.8
-            // Full House: 6M - 7M -> 0.8 - 0.9
-            // Quads+: -> 0.9 - 1.0
-            
             let baseScore = currentEval.score;
             let normalized = 0;
             
@@ -316,12 +233,12 @@ class AILogic {
     getPositionFactor(position, stage) {
         let base = 1.0;
         switch(position) {
-            case 'early': base = 0.8; break;
-            case 'middle': base = 1.0; break;
-            case 'late': base = 1.3; break;
-            case 'blind': base = 0.9; break;
+            case 'early': base = 0.8; break;   // Early: 紧 (阈值更高)
+            case 'middle': base = 1.0; break;  // Middle: 标准
+            case 'late': base = 1.3; break;    // Late: 松 (阈值更低)
+            case 'blind': base = 0.9; break;   // Blind: 稍紧
         }
-        if (stage === 'RIVER') base *= 0.9;
+        if (stage === 'RIVER') base *= 0.9;    // River 阶段更谨慎
         return base;
     }
 }
