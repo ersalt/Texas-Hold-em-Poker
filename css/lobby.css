@@ -1,0 +1,176 @@
+/* Lobby Page Styles */
+#lobby-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #1a2980, #26d0ce); /* Blue Theme */
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping for layout */
+    z-index: 1500;
+}
+
+#lobby-page.hidden {
+    display: none;
+}
+
+/* 3 Sections: Left (1), Right (1), Bottom (Full width, 20% height) */
+
+.lobby-left {
+    width: 50%;
+    height: 80%;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    position: relative;
+    /* Reserved space */
+}
+
+.lobby-user-balance {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #f1c40f;
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #f1c40f;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.lobby-right {
+    width: 50%;
+    height: 80%;
+    padding: 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.lobby-bottom {
+    width: 100%;
+    height: 20%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+}
+
+/* Right Section Modules */
+.lobby-modules {
+    display: flex;
+    /* No gap needed if we use containers for centering */
+    gap: 0; 
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* Create two halves for centering */
+.module-half {
+    flex: 1;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;
+}
+
+.module-btn {
+    /* Width: 60% of previous (which was roughly 50% of container). So 30% of total width, or 60% of half width. */
+    width: 60%;
+    /* Remove flex: 0 0 30% to use explicit width */
+    
+    padding: 18px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 80px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.module-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Room Selection in Lobby */
+#lobby-page .room-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 25px; 
+    width: 100%;
+    align-items: center; /* Center horizontally */
+}
+
+#lobby-page .room-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* 1.5x height -> increase padding */
+    padding: 30px 40px; 
+    /* 60% Width */
+    width: 60%;
+    
+    background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Ellipse Shape -> High border-radius */
+    border-radius: 100px; 
+    
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+#lobby-page .room-btn:hover {
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    border-color: #3498db;
+    transform: translateX(-10px); /* Move left slightly on hover */
+}
+
+.room-name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+.room-blind {
+    font-size: 1rem;
+    color: #bdc3c7;
+    background: rgba(0,0,0,0.3);
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* Bottom Menu */
+.bottom-menu {
+    display: flex;
+    gap: 30px;
+}
+
+.menu-btn {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+
+.menu-btn:hover {
+    background: white;
+    color: #1a2980;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}

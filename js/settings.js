@@ -11,7 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_SETTINGS = {
         nickname: '我',
         playerChips: 1000,
-        aiChips: 1000
+        // Audio
+        masterVolume: 100,
+        bgmVolume: 100,
+        sfxVolume: 100
     };
 
     let settings = loadSettingsFromStorage();
@@ -60,9 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elements for Game Settings
     const nicknameInput = document.getElementById('setting-nickname');
     const playerChipsInput = document.getElementById('setting-player-chips');
-    const aiChipsInput = document.getElementById('setting-ai-chips');
     const saveBtn = document.getElementById('save-settings');
     const resetBtn = document.getElementById('reset-settings');
+    
+    // Audio Elements
+    const masterVolInput = document.getElementById('setting-master-vol');
+    const bgmVolInput = document.getElementById('setting-bgm-vol');
+    const sfxVolInput = document.getElementById('setting-sfx-vol');
+    const masterVolVal = document.getElementById('master-vol-val');
+    const bgmVolVal = document.getElementById('bgm-vol-val');
+    const sfxVolVal = document.getElementById('sfx-vol-val');
 
     function loadSettingsFromStorage() {
         try {
@@ -85,24 +95,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateSettingsForm() {
         settings = loadSettingsFromStorage();
+        // Game Settings
         nicknameInput.value = settings.nickname || DEFAULT_SETTINGS.nickname;
         playerChipsInput.value = settings.playerChips || DEFAULT_SETTINGS.playerChips;
-        aiChipsInput.value = settings.aiChips || DEFAULT_SETTINGS.aiChips;
+
+        // Audio Settings
+        updateAudioUI();
+    }
+
+    function updateAudioUI() {
+        masterVolInput.value = settings.masterVolume ?? DEFAULT_SETTINGS.masterVolume;
+        bgmVolInput.value = settings.bgmVolume ?? DEFAULT_SETTINGS.bgmVolume;
+        sfxVolInput.value = settings.sfxVolume ?? DEFAULT_SETTINGS.sfxVolume;
+
+        masterVolVal.textContent = `${masterVolInput.value}%`;
+        bgmVolVal.textContent = `${bgmVolInput.value}%`;
+        sfxVolVal.textContent = `${sfxVolInput.value}%`;
     }
 
     function applySettingsToGame() {
         // Expose current settings globally getter
         window.getGameSettings = () => ({...settings});
 
+        // Update global user chips variable
+        window.currentUserChips = Number(settings.playerChips);
+        
+        // Update UI display in lobby/start page if function is available
+        if (typeof window.updateUserStats === 'function') {
+            window.updateUserStats();
+        }
+
         if (window.game && window.game.players) {
             // Apply name and chips to existing players
             if (window.game.players[0]) {
                 window.game.players[0].name = settings.nickname;
+                // If we are mid-game, changing settings chips might be weird.
+                // Usually we only update init chips for NEXT game.
+                // But for now let's sync if user explicitly changed it.
                 window.game.players[0].chips = Number(settings.playerChips);
             }
-            window.game.players.forEach(p => {
-                if (p.isAI) p.chips = Number(settings.aiChips);
-            });
             // Re-render players UI
             if (window.game.ui && typeof window.game.ui.initPlayers === 'function') {
                 window.game.ui.initPlayers(window.game.players);
@@ -113,17 +144,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveSettings() {
         const nick = (nicknameInput.value || '').trim() || DEFAULT_SETTINGS.nickname;
         const playerChips = parseInt(playerChipsInput.value, 10) || DEFAULT_SETTINGS.playerChips;
-        const aiChips = parseInt(aiChipsInput.value, 10) || DEFAULT_SETTINGS.aiChips;
 
+        // Merge, keeping audio settings
         settings = {
+            ...settings,
             nickname: nick,
-            playerChips: Math.max(1, playerChips),
-            aiChips: Math.max(1, aiChips)
+            playerChips: Math.max(1, playerChips)
         };
 
         persistSettings();
         applySettingsToGame();
         modal.classList.add('hidden');
+    }
+
+    function saveAudioSettings() {
+        settings = {
+            ...settings,
+            masterVolume: parseInt(masterVolInput.value, 10),
+            bgmVolume: parseInt(bgmVolInput.value, 10),
+            sfxVolume: parseInt(sfxVolInput.value, 10)
+        };
+        persistSettings();
     }
 
     function resetSettings() {
@@ -133,8 +174,23 @@ document.addEventListener('DOMContentLoaded', () => {
         applySettingsToGame();
     }
 
+    // Audio Slider listeners for live preview and auto-save
+    [masterVolInput, bgmVolInput, sfxVolInput].forEach(input => {
+        input.addEventListener('input', () => {
+            masterVolVal.textContent = `${masterVolInput.value}%`;
+            bgmVolVal.textContent = `${bgmVolInput.value}%`;
+            sfxVolVal.textContent = `${sfxVolInput.value}%`;
+            
+            // Auto-save audio settings in real-time
+            saveAudioSettings();
+        });
+    });
+
     // Initial exposure
     window.getGameSettings = () => ({...settings});
+
+    // Expose populateSettingsForm globally for lobby button
+    window.populateSettingsForm = populateSettingsForm;
 
     // Wire up buttons
     saveBtn.addEventListener('click', saveSettings);

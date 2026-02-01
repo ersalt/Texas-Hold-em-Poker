@@ -1,0 +1,26 @@
+/* Folded State Visualization */
+.player-seat.folded .hand-cards .card {
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+.player-seat.folded .avatar {
+    filter: grayscale(100%);
+    opacity: 0.6;
+}
+
+/* Ensure folded text or other indicators are clear if needed */
+.player-seat.folded::after {
+    content: "FOLD";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+    text-shadow: 1px 1px 2px black;
+    pointer-events: none;
+    z-index: 10;
+    display: none; /* Optional: enable if desired */
+}

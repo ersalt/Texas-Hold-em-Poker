@@ -6,6 +6,7 @@ class Game {
         this.communityCards = [];
         this.pot = 0;
         this.ui = new UI();
+        this.ai = new AILogic(this); // Initialize AI
         this.state = 'IDLE'; // IDLE, PREFLOP, FLOP, TURN, RIVER, SHOWDOWN
         
         // Game Logic State
@@ -21,8 +22,8 @@ class Game {
         this.resolveTurn = null;
     }
 
-    init(overrideUserChips) {
-        this.ui.log("Game Initializing...");
+    init(overrideUserChips, roomType = '1') {
+        this.ui.log(`Game Initializing (Room Type: ${roomType})...`);
         
         // Reset state
         this.players = [];
@@ -30,9 +31,11 @@ class Game {
         this.deck = new Deck(); 
         this.pot = 0;
         this.ui.reset(); 
+        this.roomType = roomType;
+        this.roomConfig = GAME_CONFIG.BLIND_LEVELS[roomType] || GAME_CONFIG.BLIND_LEVELS['1'];
         
         // Setup Players
-        const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000, aiChips: 1000};
+        const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000};
 
         // Use override chips if provided
         const userChips = (typeof overrideUserChips !== 'undefined') ? overrideUserChips : Number(settings.playerChips);
@@ -46,12 +49,24 @@ class Game {
         }
 
         // Player 0 is Human
-        this.players.push(new Player(settings.nickname, false, Number(settings.playerChips)));
+        this.players.push(new Player(settings.nickname, false, userChips));
         
         // Players 1-9 are AI
+        const aiConfigs = this.assignAIDifficulties(this.roomConfig.name, userChips, this.roomConfig.user_stack);
+        
         for (let i = 1; i < 10; i++) {
             let name = namePool[i-1] || `玩家 ${i}`;
-            this.players.push(new Player(name, true, Number(settings.aiChips)));
+            // Use configured AI stack from room config
+            const initialChips = this.roomConfig.ai_stack;
+            const player = new Player(name, true, initialChips);
+            
+            // Assign AI params
+            // Note: assignAIDifficulties returns array of 9 AIs (indices 0-8 for AI pool, but we map to players 1-9)
+            // AI Config ID 0 maps to Player 1, etc.
+            player.aiParams = aiConfigs[i-1].params;
+            player.baseLevel = aiConfigs[i-1].base_level; // For debugging/display
+            
+            this.players.push(player);
         }
         
         this.ui.initPlayers(this.players);
@@ -66,6 +81,65 @@ class Game {
         this.updateRoles();
         this.startGame();
     }
+    
+    // Assign AI Difficulties Logic
+    assignAIDifficulties(tableLevelName, userCurrentStack, userInitialStack) {
+        // Step 1: Crush Protection
+        const crushProtection = calculateCrushProtection(userCurrentStack, userInitialStack);
+        
+        // Step 2: Create 9 AI configs (for players 1-9)
+        const ais = [];
+        for (let i = 0; i < 9; i++) {
+            ais.push({
+                id: i,
+                base_level: "T1", 
+                // Position logic is approximate here as dealer rotates. 
+                // We will assign params dynamically, but base levels are static for the session/init.
+                current_stack: this.roomConfig.ai_stack,
+                params: {}
+            });
+        }
+        
+        // Step 3: Fix Dealer (Seat 5) as T1
+        // In our players array: 0 is User. 1-9 are AI.
+        // Seat 5 is Player 5. So index in ais array (which is 0-8) corresponding to Player 5 is 4.
+        const dealerAIIndex = 4; 
+        ais[dealerAIIndex].base_level = "T1";
+        
+        // Step 4: Randomly assign 1 T0, 2 T1 (excluding dealer), 5 T2
+        // Candidates indices in 'ais' array excluding dealerAIIndex
+        const candidates = [];
+        for(let i=0; i<9; i++) {
+            if(i !== dealerAIIndex) candidates.push(i);
+        }
+        
+        // Shuffle candidates
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        
+        // Assign
+        ais[candidates[0]].base_level = "T0";
+        ais[candidates[1]].base_level = "T1";
+        ais[candidates[2]].base_level = "T1";
+        for (let i = 3; i < candidates.length; i++) {
+            ais[candidates[i]].base_level = "T2";
+        }
+        
+        // Step 5: Calculate Dynamic Params for each
+        for (const ai of ais) {
+            ai.params = calculateDynamicParams(
+                ai.base_level,
+                tableLevelName,
+                ai.current_stack,
+                this.roomConfig.bb,
+                crushProtection
+            );
+        }
+        
+        return ais;
+    }
 
     // Helper to get next player index in Clockwise order (Decreasing Index)
     // 4 -> 3 -> 2 -> 1 -> 0 -> 9 -> 8 -> 7 -> 6 -> 5 -> 4
@@ -75,17 +149,22 @@ class Game {
         return idx % 10;
     }
 
-    // Helper to get next player skipping Dealer(5)
-    // Used for finding Next SB or Next BB
-    getNextNonDealerIndex(current, steps = 1) {
+    // Helper to find next eligible player for Blinds (Skipping Dealer and 0-chip players)
+    getNextEligibleBlindIndex(current) {
         let idx = current;
-        for(let i=0; i<steps; i++) {
+        // Look up to 10 times to find next eligible
+        for(let i=0; i<10; i++) {
             idx = this.getNextPlayerIndex(idx, 1);
-            if (idx === this.dealerIndex) {
-                idx = this.getNextPlayerIndex(idx, 1);
-            }
+            
+            // Skip Dealer (Fixed at 5)
+            if (idx === this.dealerIndex) continue;
+            
+            // Skip players with 0 chips
+            if (this.players[idx].chips <= 0) continue;
+            
+            return idx;
         }
-        return idx;
+        return current; 
     }
 
     updateRoles() {
@@ -95,8 +174,8 @@ class Game {
         const dealer = this.dealerIndex;
         const sb = this.sbIndex;
         
-        // BB is next non-dealer after SB
-        const bb = this.getNextNonDealerIndex(sb, 1);
+        // BB is next eligible blind after SB
+        const bb = this.getNextEligibleBlindIndex(sb);
 
         this.players[dealer].role = 'dealer';
         this.players[sb].role = 'small-blind';
@@ -120,57 +199,75 @@ class Game {
         this.players.forEach(p => {
             p.folded = false;
             p.hand = [];
-            p.currentBet = 0;
+            p.currentBet = 0; // Tracks invested amount in CURRENT street
             p.handStrength = null;
         });
         
         // Blinds
         const sbIndex = this.sbIndex;
-        const bbIndex = this.getNextNonDealerIndex(sbIndex, 1);
+        // Use getNextEligibleBlindIndex instead of removed getNextNonDealerIndex
+        const bbIndex = this.getNextEligibleBlindIndex(sbIndex);
         
-        // Hardcoded Blinds for now (should come from Room Config)
-        const SB_AMOUNT = 10;
-        const BB_AMOUNT = 20;
+        // Use configured blinds
+        const SB_AMOUNT = this.roomConfig ? this.roomConfig.sb : 10;
+        const BB_AMOUNT = this.roomConfig ? this.roomConfig.bb : 20;
         
         this.postBlind(sbIndex, SB_AMOUNT);
         this.postBlind(bbIndex, BB_AMOUNT);
         this.minBet = BB_AMOUNT;
-        this.currentBet = BB_AMOUNT;
+        this.currentBet = BB_AMOUNT; // In Preflop, currentBet starts at BB
         this.lastRaise = BB_AMOUNT; // Initial "raise" is the BB
 
         // Deal Cards
         await this.dealHoleCards();
         
         // Preflop Betting Round
-        // Action starts Left of BB (Clockwise: BB -> Next)
-        // Next from BB (Index - 1)
+        // Action starts Left of BB
         let firstActor = this.getNextPlayerIndex(bbIndex, 1);
         await this.bettingRound(firstActor);
 
+        // Flop
         if (this.countActivePlayers() > 1) {
-            // Flop
-            this.state = 'FLOP';
+            this.startNewStreet('FLOP');
             await this.dealCommunityCards(3);
-            // Action starts Left of Dealer (SB)
             await this.bettingRound(this.getNextPlayerIndex(this.dealerIndex, 1));
         }
 
+        // Turn
         if (this.countActivePlayers() > 1) {
-            // Turn
-            this.state = 'TURN';
+            this.startNewStreet('TURN');
             await this.dealCommunityCards(1);
             await this.bettingRound(this.getNextPlayerIndex(this.dealerIndex, 1));
         }
 
+        // River
         if (this.countActivePlayers() > 1) {
-            // River
-            this.state = 'RIVER';
+            this.startNewStreet('RIVER');
             await this.dealCommunityCards(1);
             await this.bettingRound(this.getNextPlayerIndex(this.dealerIndex, 1));
         }
 
         // Showdown
         await this.showdown();
+    }
+
+    startNewStreet(streetName) {
+        this.state = streetName;
+        this.currentBet = 0; // Reset current bet for new street
+        this.lastRaise = 0;
+        // Use Room Config BB for minimum bet instead of hardcoded 20
+        const BB_AMOUNT = this.roomConfig ? this.roomConfig.bb : 20;
+        this.minBet = BB_AMOUNT; 
+        
+        // Reset player invested amounts for this street
+        this.players.forEach(p => {
+            if (!p.folded) {
+                p.currentBet = 0;
+            }
+        });
+        
+        // Clear UI bets
+        this.ui.clearPlayerBets();
     }
 
     postBlind(playerIndex, amount) {
@@ -255,10 +352,10 @@ class Game {
         // Usually if everyone is All-In except maybe one, betting is done.
         
         if (this.state !== 'PREFLOP') {
-            this.players.forEach(p => p.currentBet = 0);
-            this.currentBet = 0;
-            this.lastRaise = 0; 
-            this.minBet = 20; 
+            // Already handled in startNewStreet, but if this runs unexpectedly mid-round:
+            // Ensure minBet is correct
+            const BB_AMOUNT = this.roomConfig ? this.roomConfig.bb : 20;
+            this.minBet = BB_AMOUNT;
         }
         
         // Build Queue of Actors in Clockwise Order starting from startIndex
@@ -356,57 +453,98 @@ class Game {
         switch (action.type) {
             case 'fold':
                 player.folded = true;
-                // Maybe dim player
+                this.ui.markPlayerFolded(this.players.indexOf(player));
                 break;
             case 'check':
                 this.ui.playSound('过牌1.mp3');
                 break;
             case 'call':
-                let callAmt = highestBet - player.currentBet;
-                if (callAmt > player.chips) callAmt = player.chips; 
+                // Call needs to match the highestBet.
+                // callAmt = needed - invested.
+                let needed = highestBet;
+                let alreadyInvested = player.currentBet;
+                let callAmt = needed - alreadyInvested;
+                
+                // Cap at stack
+                if (callAmt > player.chips) {
+                     callAmt = player.chips;
+                     // Technically this is All-In, but action type was 'call'
+                }
+                
                 player.chips -= callAmt;
                 player.currentBet += callAmt;
                 this.pot += callAmt;
-                this.ui.updateBalance(this.players); // Update chips immediately for visual correctness
+                this.ui.updateBalance(this.players); 
                 
-                // Animate chips
+                // Calling does NOT raise the currentBet
+                
                 await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
                 this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
-                
-                // this.ui.playSound('下注1.mp3'); // Sound handled in animation
                 break;
+
             case 'raise':
+            case 'bet': // Treat bet same as raise for logic usually
                 let totalBet = action.amount;
+                
+                // Validate minimum raise logic if needed, but usually UI/AI handles providing valid amount
                 let added = totalBet - player.currentBet;
                 
+                if (added > player.chips) {
+                     added = player.chips;
+                     totalBet = player.currentBet + added;
+                     // This becomes effectively All-In
+                }
+                
                 player.chips -= added;
-                player.currentBet += added;
+                player.currentBet = totalBet; // Should match totalBet
                 this.pot += added;
                 
-                let raiseDiff = totalBet - this.currentBet;
-                if (raiseDiff > 0) this.lastRaise = raiseDiff;
-                this.currentBet = totalBet;
+                // Update Global Game State
+                // currentBet is always monotonically increasing in a street
+                if (totalBet > this.currentBet) {
+                    let raiseDiff = totalBet - this.currentBet;
+                    // Last Raise is the difference between New Bet and Old Bet (or min bet)
+                    // If it's a re-raise, it's New - Old.
+                    if (raiseDiff > 0) {
+                        this.lastRaise = raiseDiff;
+                    }
+                    this.currentBet = totalBet;
+                }
+                
                 this.ui.updateBalance(this.players);
 
-                // Animate chips
                 await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
                 this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
-                
-                // this.ui.playSound('下注2.mp3'); // Sound handled in animation? (Maybe override)
                 break;
+
              case 'allin':
                  let allInAmt = player.chips;
                  player.chips = 0;
-                 player.currentBet += allInAmt;
+                 let finalBet = player.currentBet + allInAmt;
+                 
+                 player.currentBet = finalBet;
                  this.pot += allInAmt;
-                 if (player.currentBet > this.currentBet) {
-                     let diff = player.currentBet - this.currentBet;
-                     this.lastRaise = Math.max(this.lastRaise, diff);
-                     this.currentBet = player.currentBet;
+                 
+                 // All-in only raises the currentBet if it exceeds it
+                 // AND normally "full raise" rules apply for reopening betting, but for simple state tracking:
+                 if (finalBet > this.currentBet) {
+                     let diff = finalBet - this.currentBet;
+                     // Only update lastRaise if it's a "full" raise? 
+                     // For simplicity, we update currentBet always if higher.
+                     // But strictly, if all-in is less than min-raise, it might be treated differently.
+                     // Here we just update currentBet to ensure others have to call it.
+                     this.currentBet = finalBet;
+                     
+                     // If this all-in was a raise (more than previous high), update lastRaise?
+                     // If it's a short-stack all-in that doesn't meet min-raise, usually doesn't reopen.
+                     // We will simplify: update currentBet always.
+                     if (diff >= this.lastRaise) {
+                         this.lastRaise = diff;
+                     }
                  }
+                 
                  this.ui.updateBalance(this.players);
                  
-                 // Animate chips
                  await this.ui.animateBet(this.players.indexOf(player), player.currentBet);
                  this.ui.updatePlayerBet(this.players.indexOf(player), player.currentBet);
                  
@@ -418,25 +556,23 @@ class Game {
     }
     
     getAIAction(player, highestBet) {
-        const toCall = highestBet - player.currentBet;
-        const random = Math.random();
+        // Use AILogic class
+        const decision = this.ai.decide(player, highestBet, this.state, this.communityCards, this.pot);
         
-        if (toCall > 0) {
-            if (random < 0.1) return { type: 'fold' };
-            if (random < 0.9) return { type: 'call' };
-             let minRaise = highestBet + this.lastRaise;
-             if (player.chips > minRaise) {
-                 return { type: 'raise', amount: minRaise }; 
-             }
-             return { type: 'call' };
-        } else {
-            if (random < 0.8) return { type: 'check' };
-            let minBet = this.minBet || 20;
-            if (player.chips > minBet) {
-                return { type: 'raise', amount: minBet }; 
+        // Ensure action amount is valid
+        if (decision.type === 'raise') {
+            // Check minimum raise
+            const minRaise = highestBet + (this.lastRaise > 0 ? this.lastRaise : this.minBet);
+            if (decision.amount < minRaise) {
+                decision.amount = minRaise;
             }
-            return { type: 'check' };
+            // Check max (All-in)
+            if (decision.amount > player.chips + player.currentBet) {
+                decision.amount = player.chips + player.currentBet;
+            }
         }
+        
+        return decision;
     }
 
     waitForHumanAction() {
@@ -575,10 +711,30 @@ ${winners[0].handStrength.name}`;
         setTimeout(() => alert(msg), 500);
         
         setTimeout(() => {
+             // Game Over Check: Stop if only 1 (or 0) players have chips > Min Bet (20)
+             const MIN_REQ = 20; 
+             const solventPlayers = this.players.filter(p => p.chips >= MIN_REQ);
+             
+             if (solventPlayers.length <= 1) {
+                 let winnerName = solventPlayers.length > 0 ? solventPlayers[0].name : '无人';
+                 // Use custom alert logic or simple alert, but no cancel button implies just OK
+                 // alert() is blocking and only has OK.
+                 alert(`游戏结束！
+${winnerName} 获得最终胜利！
+即将返回大厅。`);
+                 
+                 // Trigger return to lobby WITHOUT confirmation
+                 // We can set a flag on the game instance or global
+                 this.isGameOver = true;
+                 
+                 const backBtn = document.getElementById('btn-back-home');
+                 if (backBtn) backBtn.click();
+                 return;
+             }
+
              // Rotation Logic: SB moves clockwise, skipping Dealer
-             // Dealer (5) is fixed
-             // Move SB
-             this.sbIndex = this.getNextNonDealerIndex(this.sbIndex, 1);
+             // Use getNextEligibleBlindIndex to properly skip dealer AND empty stacks
+             this.sbIndex = this.getNextEligibleBlindIndex(this.sbIndex);
              
              this.updateRoles();
              this.startGame();

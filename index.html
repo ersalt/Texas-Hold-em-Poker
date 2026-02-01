@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/settings.css">
     <link rel="stylesheet" href="css/start.css">
+    <link rel="stylesheet" href="css/lobby.css">
     <link rel="stylesheet" href="css/raise.css">
+    <link rel="stylesheet" href="css/folded.css">
 </head>
 <body>
     <!-- Start Page -->
@@ -21,23 +23,56 @@
                 <div id="date-display">2024年1月1日 星期一</div>
             </div>
             <div id="greeting-display">你好，欢迎回来</div>
-            <div id="user-stats" class="user-stats hidden">
-                <div class="stat-item">
-                    <span class="stat-label">昵称：</span>
-                    <span id="start-nickname">--</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">余额：</span>
-                    <span id="start-balance">--</span>
-                </div>
-            </div>
         </div>
         <div class="start-right">
             <h1>德州扑克</h1>
+            <h2 class="subtitle">Texas Hold'em Poker</h2>
+            <div class="start-actions">
+                <button id="btn-enter-lobby" class="lobby-btn">进入大厅</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lobby Page -->
+    <div id="lobby-page" class="hidden">
+        <div class="lobby-left">
+            <div class="lobby-user-balance">
+                <span id="lobby-balance-display">$0</span>
+            </div>
+        </div>
+        <div class="lobby-right">
+            <div class="lobby-modules">
+                <div class="module-half">
+                    <button class="module-btn" id="btn-work">打工赚钱</button>
+                </div>
+                <div class="module-half">
+                    <button class="module-btn" id="btn-shop">商城</button>
+                </div>
+            </div>
             <div class="room-selection">
-                <button class="room-btn" data-room="1">初级场 (Min 100)</button>
-                <button class="room-btn" data-room="2">中级场 (Min 500)</button>
-                <button class="room-btn" data-room="3">高级场 (Min 2000)</button>
+                <!-- 
+                    Novice: 50/100, Need > 5000
+                    Advanced: 500/1000, Need > 100000
+                    Master: 5000/10000, Need > 1000000
+                -->
+                <button class="room-btn" data-room="1" data-min="5000">
+                    <span class="room-name">新手场</span>
+                    <span class="room-blind">50/100</span>
+                </button>
+                <button class="room-btn" data-room="2" data-min="100000">
+                    <span class="room-name">进阶场</span>
+                    <span class="room-blind">500/1000</span>
+                </button>
+                <button class="room-btn" data-room="3" data-min="1000000">
+                    <span class="room-name">大师场</span>
+                    <span class="room-blind">5000/10000</span>
+                </button>
+            </div>
+        </div>
+        <div class="lobby-bottom">
+            <div class="bottom-menu">
+                <button class="menu-btn" id="btn-backpack">背包</button>
+                <button class="menu-btn" id="btn-lobby-settings">设置</button>
             </div>
         </div>
     </div>
@@ -47,58 +82,6 @@
         <!-- Settings Button -->
         <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
         
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>设置</h2>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <ul class="settings-menu">
-                        <li class="settings-item active" data-target="game-settings">游戏设置</li>
-                        <li class="settings-item" data-target="audio-settings">音量设置</li>
-                        <li class="settings-item" data-target="ai-settings">AI设置</li>
-                        <li class="settings-item" data-target="network-settings">联机设置</li>
-                        <li class="settings-item" data-target="about">关于</li>
-                    </ul>
-                    <div class="settings-panels">
-                        <div id="game-settings" class="panel active">
-                            <form id="game-settings-form" class="settings-form">
-                                <div class="settings-group">
-                                    <label for="setting-nickname">昵称（显示名）</label>
-                                    <input id="setting-nickname" type="text" maxlength="12" placeholder="我">
-                                </div>
-                                <div class="settings-group">
-                                    <label for="setting-player-chips">玩家初始筹码</label>
-                                    <input id="setting-player-chips" type="number" min="1" step="1" value="1000">
-                                </div>
-                                <div class="settings-group">
-                                    <label for="setting-ai-chips">人机初始筹码</label>
-                                    <input id="setting-ai-chips" type="number" min="1" step="1" value="1000">
-                                </div>
-                                <div class="settings-actions">
-                                    <button type="button" id="save-settings" class="btn primary">保存</button>
-                                    <button type="button" id="reset-settings" class="btn">重置</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div id="audio-settings" class="panel">音量设置内容...</div>
-                        <div id="ai-settings" class="panel">AI设置内容...</div>
-                        <div id="network-settings" class="panel">联机设置内容...</div>
-                        <div id="about" class="panel">
-                            <h3>关于</h3>
-                            <p>作者：<strong>ersalt</strong></p>
-                            <p>项目地址：<a href="https://github.com/ersalt/Texas-Hold-em-Poker" target="_blank" rel="noopener">https://github.com/ersalt/Texas-Hold-em-Poker</a></p>
-                            <p>开源协议：<strong>MIT License</strong></p>
-                            <p>版权所有 © 2026 ersalt</p>
-                            <p>Power By Gemini 3.0 Pro</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="game-table">
             
             <!-- Deck Pile -->
@@ -164,11 +147,76 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ul class="settings-menu">
+                    <li class="settings-item active" data-target="game-settings">游戏设置</li>
+                    <li class="settings-item" data-target="audio-settings">音量设置</li>
+                    <li class="settings-item" data-target="ai-settings">AI设置</li>
+                    <li class="settings-item" data-target="network-settings">联机设置</li>
+                    <li class="settings-item" data-target="about">关于</li>
+                </ul>
+                <div class="settings-panels">
+                        <div id="game-settings" class="panel active">
+                            <form id="game-settings-form" class="settings-form">
+                                <div class="settings-group">
+                                    <label for="setting-nickname">昵称（显示名）</label>
+                                    <input id="setting-nickname" type="text" maxlength="12" placeholder="我">
+                                </div>
+                                <div class="settings-group">
+                                    <label for="setting-player-chips">玩家初始筹码</label>
+                                    <input id="setting-player-chips" type="number" min="1" step="1" value="1000">
+                                </div>
+                                <div class="settings-actions">
+                                <button type="button" id="save-settings" class="btn primary">保存</button>
+                                <button type="button" id="reset-settings" class="btn">重置</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="audio-settings" class="panel">
+                        <form id="audio-settings-form" class="settings-form">
+                            <div class="settings-group">
+                                <label for="setting-master-vol">总音量 <span id="master-vol-val">100%</span></label>
+                                <input id="setting-master-vol" type="range" min="0" max="100" value="100">
+                            </div>
+                            <div class="settings-group">
+                                <label for="setting-bgm-vol">音乐音量 (BGM) <span id="bgm-vol-val">100%</span></label>
+                                <input id="setting-bgm-vol" type="range" min="0" max="100" value="100">
+                            </div>
+                            <div class="settings-group">
+                                <label for="setting-sfx-vol">音效音量 (SFX) <span id="sfx-vol-val">100%</span></label>
+                                <input id="setting-sfx-vol" type="range" min="0" max="100" value="100">
+                            </div>
+                        </form>
+                    </div>
+                    <div id="ai-settings" class="panel">AI设置内容...</div>
+                    <div id="network-settings" class="panel">联机设置内容...</div>
+                    <div id="about" class="panel">
+                        <h3>关于</h3>
+                        <p>作者：<strong>ersalt</strong></p>
+                        <p>项目地址：<a href="https://github.com/ersalt/Texas-Hold-em-Poker" target="_blank" rel="noopener">https://github.com/ersalt/Texas-Hold-em-Poker</a></p>
+                        <p>开源协议：<strong>MIT License</strong></p>
+                        <p>版权所有 © 2026 ersalt</p>
+                        <p>Power By Gemini 3.0 Pro</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts (Order matters) -->
+    <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/deck.js"></script>
     <script src="js/player.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/ai_logic.js"></script>
     <script src="js/game.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/main.js"></script>

@@ -12,7 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const backBtn = document.getElementById('btn-back-home');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            // Confirm if game is in progress? For now just go back
+            // Skip confirmation if game is over (triggered automatically)
+            if (window.game && window.game.isGameOver) {
+                returnToLobby();
+                return;
+            }
+
+            // Confirm if game is in progress
             if (confirm('确定要退出当前牌局返回大厅吗？')) {
                 returnToLobby();
             }
@@ -25,14 +31,112 @@ function initStartPage() {
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-    // Room Buttons
+    // Enter Lobby Button
+    const enterLobbyBtn = document.getElementById('btn-enter-lobby');
+    if (enterLobbyBtn) {
+        enterLobbyBtn.addEventListener('click', () => {
+             enterLobby();
+        });
+    }
+
+    // Lobby Room Buttons
     const roomBtns = document.querySelectorAll('.room-btn');
     roomBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const roomType = e.target.getAttribute('data-room');
-            startGame(roomType);
+            // Traverse up to find button if clicked on span
+            const targetBtn = e.target.closest('.room-btn');
+            if (!targetBtn) return;
+            
+            const roomType = targetBtn.getAttribute('data-room');
+            const minReq = parseInt(targetBtn.getAttribute('data-min') || '0', 10);
+            
+            // Get current chips for validation
+            const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {playerChips: 1000};
+            let currentChips = (typeof window.currentUserChips !== 'undefined') ? window.currentUserChips : settings.playerChips;
+            currentChips = Number(currentChips);
+
+            // Max Balance Restrictions
+            if (roomType === '1' && currentChips > 1000000) {
+                alert('您的余额已超过100万，高手请前往进阶场或大师场！');
+                return;
+            }
+            if (roomType === '2' && currentChips > 10000000) {
+                alert('您的余额已超过1000万，大神请前往大师场！');
+                return;
+            }
+            
+            // Check balance
+            if (checkBalanceForRoom(minReq)) {
+                startGame(roomType);
+            } else {
+                alert(`您的余额不足！进入此房间需要至少 $${minReq}`);
+            }
         });
     });
+
+    // Lobby Buttons Placeholders
+    ['btn-work', 'btn-shop', 'btn-backpack'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                alert('功能开发中，敬请期待！');
+            });
+        }
+    });
+
+    // Lobby Settings Button
+    // We attach this via event delegation or direct if exists, but we need to ensure
+    // settings logic is initialized. Since settings.js runs after main.js usually (in HTML order),
+    // we should wait or verify.
+    // However, initStartPage runs on DOMContentLoaded.
+    // Let's re-verify the element ID.
+    const lobbySettingsBtn = document.getElementById('btn-lobby-settings');
+    if (lobbySettingsBtn) {
+        lobbySettingsBtn.addEventListener('click', () => {
+             console.log("Lobby settings clicked");
+             const settingsModal = document.getElementById('settings-modal');
+             if (settingsModal) {
+                 settingsModal.classList.remove('hidden');
+                 // Ensure we are on Game Settings tab by default or just show it
+                 // Populate settings in case they were changed elsewhere or need refresh
+                 if (typeof window.populateSettingsForm === 'function') {
+                     window.populateSettingsForm();
+                 } else {
+                     console.warn("populateSettingsForm not found on window");
+                 }
+             } else {
+                 console.error("Settings modal not found");
+             }
+        });
+    }
+}
+
+function enterLobby() {
+    const startPage = document.getElementById('start-page');
+    const lobbyPage = document.getElementById('lobby-page');
+    
+    startPage.classList.add('hidden');
+    lobbyPage.classList.remove('hidden');
+    
+    // Ensure user stats are updated (using same stats container?)
+    // Note: User stats are currently in start-left. If we want them in lobby, we might need to duplicate or move them.
+    // The requirement didn't specify user stats in lobby, but logically they should be there.
+    // However, the prompt only asked for specific layout. I will stick to what was asked.
+    
+    // Update global balance just in case
+    updateUserStats();
+}
+
+function checkBalanceForRoom(minReq) {
+    const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {nickname: '我', playerChips: 1000};
+    let currentChips = (typeof window.currentUserChips !== 'undefined') ? window.currentUserChips : settings.playerChips;
+    
+    // Ensure number
+    currentChips = Number(currentChips);
+    
+    console.log(`Check Balance: Current=${currentChips}, MinReq=${minReq}, Result=${currentChips >= minReq}`);
+    
+    return currentChips >= minReq;
 }
 
 function updateDateTime() {
@@ -71,46 +175,35 @@ function updateDateTime() {
 
 function startGame(roomType) {
     const startPage = document.getElementById('start-page');
+    const lobbyPage = document.getElementById('lobby-page');
     const app = document.getElementById('app');
 
-    // Fade out start page
+    // Fade out start/lobby page
     startPage.classList.add('hidden');
+    lobbyPage.classList.add('hidden');
     
     // Show game
-    setTimeout(() => {
-        // startPage.style.display = 'none'; // done by css
+    // setTimeout(() => { // Removed delay for snappier feel
         app.classList.remove('hidden');
         
-    // Initialize Game Logic with room settings if needed
-        // For now, just init the standard game
-        // If the game was already running, we might need to reset it
         if (window.game) {
             // Apply room config based on type
             let bigBlind = 20;
-            let minChips = 1000;
-
-            if (roomType === '1') { // Primary
-                bigBlind = 20;
-                minChips = 1000;
-            } else if (roomType === '2') { // Medium
-                bigBlind = 100;
-                minChips = 5000;
-            } else if (roomType === '3') { // Advanced
-                bigBlind = 400;
-                minChips = 20000;
-            }
+            // Room configs (passed to game if implemented, for now just logic)
+            if (roomType === '1') { bigBlind = 100; }
+            else if (roomType === '2') { bigBlind = 1000; }
+            else if (roomType === '3') { bigBlind = 10000; }
 
             // Start game with current user balance if available
-            window.game.init(window.currentUserChips); 
+            window.game.init(window.currentUserChips, roomType); 
             
-            // TODO: Pass room configuration to game
-            console.log(`Starting room ${roomType}`);
+            console.log(`Starting room ${roomType} (BB: ${bigBlind})`);
         }
-    }, 500);
+    // }, 500);
 }
 
 function returnToLobby() {
-    const startPage = document.getElementById('start-page');
+    const lobbyPage = document.getElementById('lobby-page');
     const app = document.getElementById('app');
     
     // Save current user chips before leaving
@@ -121,16 +214,15 @@ function returnToLobby() {
     }
 
     app.classList.add('hidden');
-    startPage.classList.remove('hidden');
+    lobbyPage.classList.remove('hidden');
     
     // Reset game state UI
     if (window.game && window.game.ui) {
         window.game.ui.reset();
     }
-    // Logic reset will happen on next startGame() -> game.init()
 }
 
-function updateUserStats() {
+    function updateUserStats() {
     const statsDiv = document.getElementById('user-stats');
     const nickSpan = document.getElementById('start-nickname');
     const balanceSpan = document.getElementById('start-balance');
@@ -146,10 +238,19 @@ function updateUserStats() {
     }
 
     if (nickSpan) nickSpan.textContent = settings.nickname;
-    if (balanceSpan) balanceSpan.textContent = `$${currentChips}`;
+    if (balanceSpan) balanceSpan.textContent = `$${Number(currentChips).toLocaleString('en-US')}`;
     
+    // Also update Lobby Balance if exists
+    const lobbyBalance = document.getElementById('lobby-balance-display');
+    if (lobbyBalance) {
+        lobbyBalance.textContent = `$${Number(currentChips).toLocaleString('en-US')}`;
+    }
+
     if (statsDiv) statsDiv.classList.remove('hidden');
 }
+
+// Expose updateUserStats globally
+window.updateUserStats = updateUserStats;
 
 // Call on init
 updateUserStats();

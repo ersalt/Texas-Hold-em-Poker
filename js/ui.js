@@ -134,8 +134,19 @@ class UI {
 
     // Play sound helper
     playSound(soundFile) {
+        // Get volume settings
+        const settings = (window.getGameSettings && typeof window.getGameSettings === 'function') ? window.getGameSettings() : {};
+        const masterVol = (settings.masterVolume !== undefined) ? settings.masterVolume / 100 : 1;
+        const sfxVol = (settings.sfxVolume !== undefined) ? settings.sfxVolume / 100 : 1;
+        
+        // Final volume
+        const finalVol = masterVol * sfxVol;
+        if (finalVol <= 0) return;
+
         // Use encodeURIComponent to handle Chinese characters and spaces in filenames
-        const audio = new Audio(`assets/audio/${encodeURIComponent(soundFile)}`);
+        // Updated path to sfx folder
+        const audio = new Audio(`assets/audio/sfx/${encodeURIComponent(soundFile)}`);
+        audio.volume = finalVol;
         audio.play().catch(e => console.warn('Audio play failed', e));
     }
 
@@ -248,7 +259,7 @@ class UI {
         players.forEach((player, index) => {
             const chipDisplay = document.querySelector(`#seat-${index} .player-chips`);
             if (chipDisplay) {
-                chipDisplay.textContent = `$${player.chips}`;
+                chipDisplay.textContent = `$${this.formatNumber(player.chips)}`;
             }
         });
     }
@@ -258,7 +269,7 @@ class UI {
         const potChips = document.getElementById('pot-chips');
         
         if (potDisplay) {
-            potDisplay.textContent = `底池（POT）：$${amount}`;
+            potDisplay.textContent = `底池（POT）：$${this.formatNumber(amount)}`;
         }
 
         if (potChips) {
@@ -267,16 +278,30 @@ class UI {
                 potChips.innerText = '';
             } else {
                 potChips.classList.remove('hidden');
+                // Use formatNumber for text display inside pot stack if needed, 
+                // but formatChipText was used for abbreviated text like '10k'.
+                // If user wants commas everywhere, let's stick to formatNumber or formatChipText logic?
+                // The requirement says "All places displaying balance... comma separated".
+                // formatChipText is for the visual chip stack label, maybe keep it abbreviated or use commas?
+                // Let's use formatNumber for consistency if space allows, or abbreviated.
+                // Assuming "balance display" refers to numbers like $1,000.
+                // For chip stack text, let's use comma too if it fits, otherwise abbreviated.
+                // I'll stick to formatChipText for the small token label, but update formatChipText to use commas if not using k.
                 potChips.innerText = this.formatChipText(amount);
                 this.updateChipStyle(potChips, amount);
             }
         }
     }
 
-    // Helper to format chip text (e.g., 1k for 1000 if needed, but requirements say 1-1000 so maybe just number)
+    formatNumber(num) {
+        return num.toLocaleString('en-US');
+    }
+
+    // Helper to format chip text
     formatChipText(amount) {
+        if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
         if (amount >= 10000) return (amount / 1000).toFixed(1) + 'k';
-        return amount;
+        return this.formatNumber(amount);
     }
 
     // Helper to update chip style based on amount
@@ -318,6 +343,14 @@ class UI {
             chip.style.zIndex = i;
             
             element.appendChild(chip);
+        }
+    }
+
+    // Mark player as folded (visual update)
+    markPlayerFolded(playerIndex) {
+        const seat = document.getElementById(`seat-${playerIndex}`);
+        if (seat) {
+            seat.classList.add('folded');
         }
     }
 
@@ -504,6 +537,7 @@ class UI {
         
         slider.min = actualMin;
         slider.max = maxRaise;
+        // Default to minRaise
         slider.value = actualMin;
         input.value = actualMin;
 
@@ -512,27 +546,47 @@ class UI {
 
         modal.classList.remove('hidden');
 
-        // Handlers
-        const updateValue = (val) => {
-            // Snap to increments if needed? For now just raw value.
-            // Maybe snap to 50s?
+        // Update handlers to just update the other input without clamping immediately while typing
+        const updateSlider = (val) => {
             let numVal = parseInt(val, 10);
             if (isNaN(numVal)) numVal = actualMin;
-            
-            // Clamp
+            // Clamp for slider
             numVal = Math.max(actualMin, Math.min(numVal, maxRaise));
-            
             slider.value = numVal;
             input.value = numVal;
         };
 
-        slider.oninput = (e) => updateValue(e.target.value);
-        input.onchange = (e) => updateValue(e.target.value);
+        const updateInput = (val) => {
+             let numVal = parseInt(val, 10);
+             // Don't clamp yet, let user type
+             // Just sync slider if within range
+             if (!isNaN(numVal)) {
+                 if (numVal >= actualMin && numVal <= maxRaise) {
+                     slider.value = numVal;
+                 }
+             }
+        };
+        
+        const finalizeInput = (val) => {
+             let numVal = parseInt(val, 10);
+             if (isNaN(numVal)) numVal = actualMin;
+             numVal = Math.max(actualMin, Math.min(numVal, maxRaise));
+             slider.value = numVal;
+             input.value = numVal;
+        }
+
+        slider.oninput = (e) => updateSlider(e.target.value);
+        input.oninput = (e) => updateInput(e.target.value);
+        input.onchange = (e) => finalizeInput(e.target.value);
 
         // Shortcuts
         shortcuts.forEach(btn => {
-            btn.onclick = () => {
-                const action = btn.dataset.action;
+            // Remove old listeners to prevent stacking
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.onclick = () => {
+                const action = newBtn.dataset.action;
                 let targetVal = actualMin;
                 
                 if (action === 'min') targetVal = actualMin;
@@ -540,25 +594,36 @@ class UI {
                 else if (action === 'pot-full') targetVal = Math.min(maxRaise, currentPot);
                 else if (action === 'allin') targetVal = maxRaise;
 
-                // Ensure it's at least min (unless pot calc was lower, but min is absolute floor)
+                // Ensure it's at least min (unless pot calc was lower, but min is absolute floor for valid raise)
+                // Exception: if pot/2 is less than min, user probably wants min anyway? 
+                // Rules say raise must be >= min raise. 
                 if (action !== 'allin' && targetVal < actualMin) targetVal = actualMin;
 
-                updateValue(targetVal);
+                finalizeInput(targetVal);
             };
         });
 
         // Confirm
-        confirmBtn.onclick = () => {
-            const finalAmount = parseInt(input.value, 10);
+        // Remove old listeners
+        const newConfirm = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+        
+        newConfirm.onclick = () => {
+            let finalAmount = parseInt(input.value, 10);
+            // Final validation
+             if (isNaN(finalAmount)) finalAmount = actualMin;
+             finalAmount = Math.max(actualMin, Math.min(finalAmount, maxRaise));
+            
             modal.classList.add('hidden');
             if (onConfirm) onConfirm(finalAmount);
         };
 
         // Close
-        closeBtn.onclick = () => {
+        const newClose = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newClose, closeBtn);
+        
+        newClose.onclick = () => {
             modal.classList.add('hidden');
-            // Maybe treat as cancel/fold? Or just close modal? 
-            // Usually close = do nothing.
         };
     }
 }
