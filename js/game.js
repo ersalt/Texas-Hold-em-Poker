@@ -41,7 +41,7 @@ class Game {
         const userChips = (typeof overrideUserChips !== 'undefined') ? overrideUserChips : Number(settings.playerChips);
 
         // Name Pool
-        const namePool = ['刀客', '镖师', '账房', '说书', '茶客', '赌坊', '码头', '客栈', '戏班', '码头', '盐商', '马帮'];
+        const namePool = ['刀客', '镖师', '账房', '说书', '茶客', '厨子', '相师', '舞女', '戏班', '船夫', '盐商', '马帮'];
         // Shuffle names
         for (let i = namePool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
