@@ -1,0 +1,501 @@
+/* Game Specific Styles */
+#game-table {
+    position: relative;
+    width: 90vw; /* Wider table */
+    max-width: 1800px; 
+    height: 50vh; /* Reduced height to ensure players fit on screen */
+    background-color: #35654d;
+    border-radius: 400px;
+    border: 20px solid #5d4037;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 50px rgba(0,0,0,0.5);
+    /* Center vertically and horizontally */
+    position: absolute;
+    top: 50%; /* Center vertically */
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+    overflow: visible; /* Ensure children are not clipped */
+}
+
+#controls {
+    position: absolute;
+    /* Moved below player 0 (user) */
+    bottom: -270px; /* Below seat-0 bottom:-140px */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    gap: 15px;
+}
+
+.game-btn {
+    padding: 12px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px; /* Rounded rectangle */
+    cursor: pointer;
+    margin: 0;
+    color: white;
+    /* Style like community card box */
+    background-color: rgba(0, 0, 0, 0.6); 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.fold { border-color: #e74c3c; color: #e74c3c; }
+.check { border-color: #2ecc71; color: #2ecc71; }
+.call { border-color: #3498db; color: #3498db; }
+.raise { border-color: #f1c40f; color: #f1c40f; }
+.allin { border-color: #e67e22; color: #e67e22; box-shadow: 0 0 10px rgba(230, 126, 34, 0.5); }
+
+.game-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.4);
+}
+
+/* Community Cards Area (Center) */
+#community-cards {
+    position: relative; /* Changed from absolute to relative for flex alignment */
+    /* Removed top/left transforms as it's now in a container */
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Container for Community Cards + Pot Chips */
+#community-cards-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between cards and pot chips */
+}
+
+/* Pot Container */
+#pot-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 100px;
+}
+
+/* Pot Display Text */
+#pot-display {
+    color: #f1c40f;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.card-slot {
+    width: 60px;
+    height: 90px;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+}
+
+/* Deck Pile - Left of Community Cards */
+#deck-pile {
+    position: absolute;
+    top: 50%;
+    /* Position to the left of community cards */
+    /* Community cards width approx: (60+10)*5 + 30 = 380px. Half is 190. */
+    /* So left of center should be -190 - deck width - spacing */
+    left: calc(50% - 280px); 
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 90px;
+    z-index: 5;
+}
+
+#deck-pile .card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/* Player Seats Layout */
+#players-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100; /* Increase z-index */
+}
+
+.player-seat {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    /* Debug style */
+    /* background: rgba(255,0,0,0.2); */ 
+}
+
+/* Avatar as Button Style */
+.avatar {
+    width: 80px;
+    height: 80px;
+    min-width: 80px; /* Prevent squashing */
+    min-height: 80px; /* Prevent squashing */
+    flex-shrink: 0;   /* Prevent squashing */
+    border-radius: 50%;
+    
+    /* Button specific styles */
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    cursor: default; /* Not clickable */
+    
+    background-color: #f0f0f0;
+    
+    /* Default AI border */
+    border: 4px solid #95a5a6; 
+    
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Button-like shadow */
+    
+    /* Flex alignment for text */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Typography */
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 14px; 
+    color: #333;
+    
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* User Avatar - Gold Button */
+.player-seat.is-user .avatar {
+    background-color: #fff9db;
+    border-color: #f1c40f;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.8), 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* Dealer - Blue Button */
+.player-seat.role-dealer .avatar {
+    background-color: #ebf5fb;
+    border-color: #3498db;
+}
+
+/* Small Blind - Purple Button */
+.player-seat.role-small-blind .avatar {
+    background-color: #f4ecf7;
+    border-color: #9b59b6;
+}
+
+/* Big Blind - Red Button */
+.player-seat.role-big-blind .avatar {
+    background-color: #fdedec;
+    border-color: #e74c3c;
+}
+
+/* Player Info (Chips) */
+.player-info {
+    background: rgba(0, 0, 0, 0.8);
+    color: #f1c40f; /* Gold text for chips */
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    text-align: center;
+    z-index: 21; /* Above avatar */
+    min-width: 60px;
+    border: 1px solid #555;
+    position: absolute;
+    /* Default position for top players - placed above */
+    top: -30px; 
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/* Adjust Info Position per Seat Group */
+
+/* Bottom Players (0, 1, 9) - Info below */
+/* Also apply to side players 2, 3, 7, 8 as requested */
+.seat-0 .player-info,
+.seat-1 .player-info,
+.seat-9 .player-info,
+.seat-2 .player-info,
+.seat-3 .player-info,
+.seat-7 .player-info,
+.seat-8 .player-info {
+    top: auto;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+}
+
+/* Top Players (4, 5, 6) - Info above, moved further up */
+.seat-4 .player-info,
+.seat-5 .player-info,
+.seat-6 .player-info {
+    top: -50px; /* Moved up by 20px (from -30px default) */
+}
+
+.player-name {
+    display: none; /* Hide name in info box, it's inside avatar now */
+}
+
+/* Role Indicator (Dealer Button / Blind Text) */
+.role-indicator {
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    background-color: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 20;
+}
+
+.role-dealer .role-indicator { color: #3498db; content: "D"; }
+.role-small-blind .role-indicator { color: #9b59b6; }
+.role-big-blind .role-indicator { color: #e74c3c; }
+
+.player-chips {
+    color: #f1c40f;
+    font-size: 11px;
+}
+
+/* Cards for players */
+.hand-cards {
+    display: flex;
+    position: absolute;
+    z-index: 1;
+}
+
+/* Positioning 10 Players */
+/* Seat 0 is User (Bottom Center) */
+/* Seat 5 is Dealer (Top Center) */
+/* Hands must be inside the table (green area) */
+
+/* Human Player (Bottom Center) */
+.seat-0 { bottom: -140px; left: 50%; transform: translateX(-50%); }
+.seat-0 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); } 
+
+/* Bottom Right Group */
+.seat-1 { bottom: -140px; right: 22%; } 
+.seat-1 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); }
+
+/* Right Side */
+.seat-2 { bottom: 8%; right: -100px; }
+.seat-2 .hand-cards { right: 170px; top: 50%; transform: translateY(-50%) translateY(-75px); } /* Up by 1 card height */
+
+.seat-3 { top: calc(8% - 30px); right: -70px; }
+.seat-3 .hand-cards { right: 170px; top: 50%; transform: translateY(-50%) translateY(75px); } /* Down by 1 card height */
+
+/* Top Right Group */
+.seat-4 { top: -140px; right: 22%; }
+.seat-4 .hand-cards { top: 150px; left: 50%; transform: translateX(-50%); }
+
+/* Dealer / Top Center */
+.seat-5 { top: -146px; left: 50%; transform: translateX(-50%); }
+.seat-5 .hand-cards { top: 156px; left: 50%; transform: translateX(-50%); } 
+
+/* Top Left Group */
+.seat-6 { top: -156px; left: 22%; }
+.seat-6 .hand-cards { top: 166px; left: 50%; transform: translateX(-50%); }
+
+/* Left Side */
+.seat-7 { top: calc(8% - 30px); left: -70px; }
+.seat-7 .hand-cards { left: 170px; top: 50%; transform: translateY(-50%) translateY(75px); } /* Down by 1 card height */
+
+.seat-8 { bottom: 8%; left: -100px; }
+.seat-8 .hand-cards { left: 170px; top: 50%; transform: translateY(-50%) translateY(-75px); } /* Up by 1 card height */
+
+/* Bottom Left Group */
+.seat-9 { bottom: -140px; left: 22%; }
+.seat-9 .hand-cards { bottom: 150px; left: 50%; transform: translateX(-50%); }
+
+
+/* Card Styling Updates */
+.card {
+    width: 50px;
+    height: 75px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    margin: 0 2px;
+    position: relative;
+    border: 1px solid #ccc;
+    
+    /* Animation base styles */
+    transition: transform 0.5s ease-out;
+}
+
+/* Flying Card for Animation */
+.flying-card {
+    position: fixed; /* Fixed relative to viewport to fly anywhere */
+    z-index: 1000;
+    pointer-events: none;
+    transition: all 0.5s ease-out;
+}
+
+.card.red {
+    color: #e74c3c;
+}
+
+.card.black {
+    color: #2c3e50;
+}
+
+.card-rank {
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.card-suit {
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* Card Back */
+.card.back {
+    background-color: #2c69a9; /* Requested blue color */
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.1) 0px,
+        rgba(255, 255, 255, 0.1) 10px,
+        transparent 10px,
+        transparent 20px
+    ),
+    repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.1) 0px,
+        rgba(255, 255, 255, 0.1) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    border: 2px solid white;
+}
+
+/* Chip Styles */
+.chip-stack {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Individual Chip Token */
+.chip-token {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    border: 2px dashed rgba(255,255,255,0.7);
+    /* Colors will be set via inline styles or specific classes if needed, 
+       but requirement says random colors */
+}
+
+/* Text on top of stack */
+.chip-text {
+    position: absolute;
+    top: -15px; /* Above stack */
+    background-color: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 55;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-stack.hidden {
+    display: none;
+}
+
+/* Pot Chips - relative positioning inside pot-container */
+.pot-stack {
+    position: relative;
+    margin-bottom: 5px;
+    height: 40px; /* Reserve space */
+}
+
+/* Player Betting Chips Position */
+/* Seats 0, 1, 4, 5, 6, 7, 8, 9: Right of 2nd card */
+/* These players are generally top/bottom or left corners */
+/* We position relative to the HAND container */
+
+/* Default positioning (Right of hand) */
+.bet-chips {
+    position: absolute;
+    z-index: 50;
+    /* Adjust based on requirement */
+}
+
+/* Seats 0, 1, 4, 5, 6, 7, 8, 9 */
+/* Hand width is roughly 2 cards (50px) + gaps. Let's say ~110px. */
+/* Right of 2nd card means to the right of the hand container. */
+.seat-0 .bet-chips,
+.seat-1 .bet-chips,
+.seat-4 .bet-chips,
+.seat-5 .bet-chips,
+.seat-6 .bet-chips,
+.seat-7 .bet-chips,
+.seat-8 .bet-chips,
+.seat-9 .bet-chips {
+    top: 50%;
+    left: 100%; /* Right of hand */
+    transform: translateY(-50%) translateX(10px); /* 10px spacing */
+}
+
+/* Seats 2, 3: Left of 1st card */
+/* These are right-side players */
+.seat-2 .bet-chips,
+.seat-3 .bet-chips {
+    top: 50%;
+    right: 100%; /* Left of hand */
+    transform: translateY(-50%) translateX(-10px); /* 10px spacing */
+    left: auto;
+}
+
+/* Flying Chips Animation */
+.flying-chip {
+    position: fixed;
+    z-index: 1000;
+    transition: all 0.6s ease-in-out;
+    pointer-events: none;
+}

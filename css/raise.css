@@ -1,0 +1,147 @@
+/* Raise Control Styles */
+.raise-control {
+    position: absolute;
+    bottom: 120px; /* Above controls */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #f1c40f;
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    z-index: 2000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.raise-control.hidden {
+    display: none;
+}
+
+.raise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+.raise-header span {
+    font-weight: bold;
+    color: #f1c40f;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: white;
+}
+
+.raise-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.raise-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.raise-slider {
+    flex: 1;
+    cursor: pointer;
+}
+
+.raise-input {
+    width: 100px;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #333;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+.raise-shortcuts {
+    display: flex;
+    gap: 5px;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.shortcut-btn {
+    flex: 1;
+    padding: 5px;
+    font-size: 12px;
+    background: #444;
+    color: #eee;
+    border: 1px solid #666;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.shortcut-btn:hover {
+    background: #555;
+}
+
+.raise-confirm-area {
+    text-align: center;
+}
+
+#confirm-raise {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    background: #f1c40f;
+    color: #2c3e50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#confirm-raise:hover {
+    background: #f39c12;
+}
+
+/* Pot Display */
+#community-cards-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#community-cards {
+    /* Reset absolute positioning since it's now in a flex container */
+    position: static; 
+    transform: none;
+    margin-bottom: 10px;
+}
+
+#pot-display {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5); /* Matching typical dashed border color */
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 10px;
+    border-radius: 10px;
+}
